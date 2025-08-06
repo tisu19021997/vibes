@@ -33,15 +33,7 @@ export class GeminiService {
     }
 
     try {
-      const prompt = `${JUNG_PROMPT}\n\n"${request.dreamContent}"\n\nPlease provide your analysis in the following JSON format:
-      {
-        "analysis": "Main interpretation and meaning",
-        "jungianInterpretation": "Specific Jungian psychological insights",
-        "symbols": ["key", "symbols", "identified"],
-        "archetypes": ["archetypes", "present"],
-        "emotions": ["underlying", "emotions"],
-        "suggestions": ["practical", "suggestions", "for", "integration"]
-      }`;
+      const prompt = `${JUNG_PROMPT}\n\n"${request.dreamContent}"`;
 
       const response = await fetch(GEMINI_API_URL, {
         method: 'POST',
@@ -60,6 +52,49 @@ export class GeminiService {
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 2048,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "object",
+              properties: {
+                analysis: {
+                  type: "string",
+                  description: "Main interpretation and meaning"
+                },
+                jungianInterpretation: {
+                  type: "string",
+                  description: "Specific Jungian psychological insights"
+                },
+                symbols: {
+                  type: "array",
+                  items: {
+                    type: "string"
+                  },
+                  description: "Key symbols identified"
+                },
+                archetypes: {
+                  type: "array",
+                  items: {
+                    type: "string"
+                  },
+                  description: "Archetypes present"
+                },
+                emotions: {
+                  type: "array",
+                  items: {
+                    type: "string"
+                  },
+                  description: "Underlying emotions"
+                },
+                suggestions: {
+                  type: "array",
+                  items: {
+                    type: "string"
+                  },
+                  description: "Practical suggestions for integration"
+                }
+              },
+              required: ["analysis", "jungianInterpretation", "symbols", "archetypes", "emotions", "suggestions"]
+            }
           }
         })
       });
@@ -71,22 +106,8 @@ export class GeminiService {
       const data = await response.json();
       const analysisText = data.candidates[0].content.parts[0].text;
       
-      // Try to extract JSON from the response
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const analysisData = JSON.parse(jsonMatch[0]);
-        return analysisData;
-      } else {
-        // Fallback if JSON extraction fails
-        return {
-          analysis: analysisText,
-          jungianInterpretation: "This dream appears to contain archetypal elements that warrant deeper exploration through the lens of analytical psychology.",
-          symbols: ["Unknown symbols require further analysis"],
-          archetypes: ["Universal patterns to be explored"],
-          emotions: ["Complex emotional undercurrents"],
-          suggestions: ["Reflect on the dream's personal significance", "Consider journaling about recurring themes"]
-        };
-      }
+      // With structured output, the response should already be valid JSON
+      return JSON.parse(analysisText);
     } catch (error) {
       console.error('Error analyzing dream:', error);
       throw new Error('Failed to analyze dream. Please check your API key and try again.');
