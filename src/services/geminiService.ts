@@ -1,7 +1,7 @@
 import { DreamAnalysisRequest, DreamAnalysisResponse } from '@/types/dream';
 
 const GEMINI_API_KEY = 'your-gemini-api-key-here'; // This will be set by user
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 const JUNG_PROMPT = `
 You are a wise dream analyst deeply versed in Carl Jung's analytical psychology and dream interpretation theories. 
@@ -43,10 +43,11 @@ export class GeminiService {
         "suggestions": ["practical", "suggestions", "for", "integration"]
       }`;
 
-      const response = await fetch(`${GEMINI_API_URL}?key=${this.apiKey}`, {
+      const response = await fetch(GEMINI_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-goog-api-key': this.apiKey,
         },
         body: JSON.stringify({
           contents: [{
