@@ -26,7 +26,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					glow: 'hsl(var(--primary-glow))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -62,6 +63,18 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
+			},
+			backgroundImage: {
+				'gradient-mystical': 'var(--gradient-mystical)',
+				'gradient-ethereal': 'var(--gradient-ethereal)',
+				'gradient-cosmic': 'var(--gradient-cosmic)'
+			},
+			boxShadow: {
+				'dream': 'var(--shadow-dream)',
+				'card-mystical': 'var(--shadow-card)'
+			},
+			transitionTimingFunction: {
+				'mystical': 'cubic-bezier(0.4, 0, 0.2, 1)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
