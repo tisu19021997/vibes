@@ -36,38 +36,38 @@ export const TarotCardGenerator: React.FC<TarotCardGeneratorProps> = ({
               <stop offset="0%" style="stop-color:${selectedTheme.primaryColor};stop-opacity:1" />
               <stop offset="100%" style="stop-color:${selectedTheme.secondaryColor};stop-opacity:1" />
             </linearGradient>
-            <pattern id="stars" patternUnits="userSpaceOnUse" width="50" height="50">
-              <circle cx="25" cy="25" r="2" fill="${selectedTheme.accentColor}" opacity="0.3"/>
-              <circle cx="10" cy="10" r="1" fill="${selectedTheme.accentColor}" opacity="0.5"/>
-              <circle cx="40" cy="15" r="1.5" fill="${selectedTheme.accentColor}" opacity="0.4"/>
+            <pattern id="texture" patternUnits="userSpaceOnUse" width="40" height="40">
+              <rect width="40" height="40" fill="${selectedTheme.accentColor}" opacity="0.02"/>
+              <circle cx="20" cy="20" r="1" fill="${selectedTheme.secondaryColor}" opacity="0.1"/>
             </pattern>
           </defs>
           
           <!-- Background -->
           <rect width="400" height="600" fill="url(#bg)"/>
-          <rect width="400" height="600" fill="url(#stars)"/>
+          <rect width="400" height="600" fill="url(#texture)"/>
           
           <!-- Border -->
-          <rect x="20" y="20" width="360" height="560" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="2" rx="10"/>
+          <rect x="15" y="15" width="370" height="570" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="1" rx="8"/>
+          <rect x="25" y="25" width="350" height="550" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="0.5" rx="4"/>
           
           <!-- Title Area -->
-          <rect x="40" y="40" width="320" height="80" fill="rgba(255,255,255,0.1)" rx="5"/>
-          <text x="200" y="70" font-family="${selectedTheme.fontFamily}" font-size="24" fill="white" text-anchor="middle" font-weight="bold">
+          <rect x="40" y="50" width="320" height="70" fill="${selectedTheme.accentColor}" opacity="0.1" rx="4"/>
+          <text x="200" y="75" font-family="${selectedTheme.fontFamily}" font-size="22" fill="${selectedTheme.accentColor}" text-anchor="middle" font-weight="600">
             ${cardTitle || 'Dream Vision'}
           </text>
-          <text x="200" y="95" font-family="${selectedTheme.fontFamily}" font-size="14" fill="white" text-anchor="middle" opacity="0.8">
+          <text x="200" y="95" font-family="${selectedTheme.fontFamily}" font-size="12" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.7">
             ${cardSubtitle || format(new Date(), 'MMMM dd, yyyy')}
           </text>
           
-          <!-- Central Image Area -->
-          <rect x="60" y="140" width="280" height="280" fill="rgba(255,255,255,0.05)" rx="10"/>
-          <circle cx="200" cy="280" r="80" fill="rgba(255,255,255,0.1)"/>
-          <text x="200" y="290" font-family="serif" font-size="48" fill="white" text-anchor="middle">✦</text>
+          <!-- Central Symbol Area -->
+          <rect x="80" y="140" width="240" height="240" fill="${selectedTheme.accentColor}" opacity="0.05" rx="8"/>
+          <circle cx="200" cy="260" r="60" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="1" opacity="0.3"/>
+          <text x="200" y="275" font-family="serif" font-size="36" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.8">◈</text>
           
-          <!-- Bottom Text Area -->
-          <rect x="40" y="440" width="320" height="120" fill="rgba(255,255,255,0.05)" rx="5"/>
-          <text x="200" y="460" font-family="${selectedTheme.fontFamily}" font-size="12" fill="white" text-anchor="middle" opacity="0.7">
-            Dream Analysis
+          <!-- Bottom Section -->
+          <rect x="40" y="420" width="320" height="120" fill="${selectedTheme.accentColor}" opacity="0.03" rx="4"/>
+          <text x="200" y="440" font-family="${selectedTheme.fontFamily}" font-size="10" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.6">
+            DREAM ANALYSIS
           </text>
         </svg>
       `)}`;

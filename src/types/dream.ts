@@ -30,44 +30,44 @@ export interface CardTheme {
 
 export const CARD_THEMES: CardTheme[] = [
   {
-    id: 'mystical',
-    name: 'Mystical Night',
-    primaryColor: '#8B5CF6',
-    secondaryColor: '#A855F7',
-    accentColor: '#C084FC',
-    backgroundPattern: 'cosmic',
-    fontFamily: 'serif',
-    borderStyle: 'ornate'
+    id: 'minimal',
+    name: 'Minimal Gray',
+    primaryColor: '#5e5e5e',
+    secondaryColor: '#000000',
+    accentColor: '#f7f7f7',
+    backgroundPattern: 'subtle',
+    fontFamily: 'sans-serif',
+    borderStyle: 'clean'
   },
   {
-    id: 'ethereal',
-    name: 'Ethereal Dawn',
-    primaryColor: '#06B6D4',
-    secondaryColor: '#67E8F9',
-    accentColor: '#A5F3FC',
-    backgroundPattern: 'flowing',
-    fontFamily: 'sans-serif',
+    id: 'monochrome',
+    name: 'Pure Monochrome',
+    primaryColor: '#000000',
+    secondaryColor: '#5e5e5e',
+    accentColor: '#f7f7f7',
+    backgroundPattern: 'geometric',
+    fontFamily: 'serif',
     borderStyle: 'minimal'
   },
   {
-    id: 'ancient',
-    name: 'Ancient Wisdom',
-    primaryColor: '#D97706',
-    secondaryColor: '#F59E0B',
-    accentColor: '#FCD34D',
-    backgroundPattern: 'geometric',
-    fontFamily: 'serif',
-    borderStyle: 'classic'
+    id: 'light',
+    name: 'Light Minimalist',
+    primaryColor: '#f7f7f7',
+    secondaryColor: '#5e5e5e',
+    accentColor: '#000000',
+    backgroundPattern: 'clean',
+    fontFamily: 'sans-serif',
+    borderStyle: 'subtle'
   },
   {
-    id: 'lunar',
-    name: 'Lunar Eclipse',
-    primaryColor: '#4C1D95',
-    secondaryColor: '#6D28D9',
-    accentColor: '#8B5CF6',
-    backgroundPattern: 'celestial',
-    fontFamily: 'fantasy',
-    borderStyle: 'mystical'
+    id: 'contrast',
+    name: 'High Contrast',
+    primaryColor: '#000000',
+    secondaryColor: '#f7f7f7',
+    accentColor: '#5e5e5e',
+    backgroundPattern: 'bold',
+    fontFamily: 'mono',
+    borderStyle: 'sharp'
   }
 ];
 
