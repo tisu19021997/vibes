@@ -1,7 +1,7 @@
 export interface Dream {
   id: string;
   content: string;
-  analysis: string;
+  analysis: DreamAnalysisResponse;
   tarotCard?: TarotCard;
   createdAt: Date;
   updatedAt: Date;
@@ -31,43 +31,23 @@ export interface CardTheme {
 export const CARD_THEMES: CardTheme[] = [
   {
     id: 'minimal',
-    name: 'Minimal Gray',
-    primaryColor: '#5e5e5e',
-    secondaryColor: '#000000',
-    accentColor: '#f7f7f7',
-    backgroundPattern: 'subtle',
+    name: 'Minimal',
+    primaryColor: '#000000',
+    secondaryColor: '#ffffff',
+    accentColor: '#888888',
+    backgroundPattern: 'half-circle',
     fontFamily: 'sans-serif',
     borderStyle: 'clean'
   },
   {
-    id: 'monochrome',
-    name: 'Pure Monochrome',
-    primaryColor: '#000000',
-    secondaryColor: '#5e5e5e',
-    accentColor: '#f7f7f7',
-    backgroundPattern: 'geometric',
-    fontFamily: 'serif',
-    borderStyle: 'minimal'
-  },
-  {
-    id: 'light',
-    name: 'Light Minimalist',
-    primaryColor: '#f7f7f7',
-    secondaryColor: '#5e5e5e',
-    accentColor: '#000000',
-    backgroundPattern: 'clean',
+    id: 'colorful',
+    name: 'Colorful',
+    primaryColor: '#ff6b6b',
+    secondaryColor: '#4ecdc4',
+    accentColor: '#45b7d1',
+    backgroundPattern: 'rainbow-circle',
     fontFamily: 'sans-serif',
-    borderStyle: 'subtle'
-  },
-  {
-    id: 'contrast',
-    name: 'High Contrast',
-    primaryColor: '#000000',
-    secondaryColor: '#f7f7f7',
-    accentColor: '#5e5e5e',
-    backgroundPattern: 'bold',
-    fontFamily: 'mono',
-    borderStyle: 'sharp'
+    borderStyle: 'rounded'
   }
 ];
 
@@ -84,4 +64,21 @@ export interface DreamAnalysisResponse {
   archetypes: string[];
   emotions: string[];
   suggestions: string[];
+  tarotCard: {
+    title: string;
+    subtitle: string;
+  };
+}
+
+export interface DreamImage {
+  id: string;
+  imageUrl: string;
+  prompt: string;
+  createdAt: Date;
+}
+
+export interface CardNameSuggestion {
+  title: string;
+  subtitle: string;
+  reasoning: string;
 }

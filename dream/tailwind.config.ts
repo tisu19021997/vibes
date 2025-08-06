@@ -18,6 +18,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'candy': ['Emilys Candy', 'cursive'],
+				'zen': ['Emilys Candy', 'cursive']
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

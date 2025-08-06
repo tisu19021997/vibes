@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Emilys+Candy&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -127,8 +129,8 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-light;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    @apply bg-background text-foreground font-candy;
+    font-family: 'Emilys Candy', cursive;
     background: hsl(var(--background));
     background-image: var(--gradient-cosmic);
   }
@@ -166,7 +168,7 @@ All colors MUST be HSL.
   }
   
   .mystical-button {
-    @apply bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium;
+    @apply bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium font-sans;
     background: var(--gradient-mystical);
     transition: var(--transition-mystical);
     box-shadow: var(--shadow-dream);

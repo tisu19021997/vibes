@@ -4,12 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DreamInput } from '@/components/DreamInput';
 import { DreamAnalysis } from '@/components/DreamAnalysis';
-import { TarotCardGenerator } from '@/components/TarotCardGenerator';
+import { DreamImageGenerator } from '@/components/DreamImageGenerator';
 import { DreamGallery } from '@/components/DreamGallery';
 import { ApiKeyModal } from '@/components/ApiKeyModal';
 import { useDreamStorage } from '@/hooks/useDreamStorage';
 import { geminiService } from '@/services/geminiService';
-import { Dream, TarotCard, DreamAnalysisResponse } from '@/types/dream';
+import { Dream, TarotCard, DreamAnalysisResponse, DreamImage, CARD_THEMES } from '@/types/dream';
 import { useToast } from '@/hooks/use-toast';
 import { Moon, Sparkles, BookOpen, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -88,13 +88,24 @@ const Index = () => {
     }
   };
 
-  const handleCardGenerated = (card: TarotCard) => {
+  const handleImageGenerated = (image: DreamImage) => {
     if (!currentAnalysis) return;
+
+    // Convert DreamImage to TarotCard
+    const card: TarotCard = {
+      id: image.id,
+      imageUrl: image.imageUrl,
+      title: currentAnalysis.tarotCard.title,
+      subtitle: currentAnalysis.tarotCard.subtitle,
+      analysis: currentAnalysis.analysis,
+      theme: CARD_THEMES[0], // Default to minimal theme
+      createdAt: image.createdAt
+    };
 
     const dream: Dream = {
       id: `dream-${Date.now()}`,
       content: currentDream,
-      analysis: currentAnalysis.analysis,
+      analysis: currentAnalysis,
       tarotCard: card,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -135,7 +146,7 @@ const Index = () => {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <Moon className="h-8 w-8 text-primary" />
+          <img src="/icon.png" alt="Dream Journal" className="h-10 w-10" />
         </motion.div>
       </div>
     );
@@ -143,33 +154,34 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-8 py-16 max-w-8xl">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center mb-8"
+          className="flex justify-between items-center mb-16"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-5">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             >
-              <Moon className="h-8 w-8 text-primary" />
+              <img src="/icon.png" alt="Dream Journal" className="h-12 w-12" />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-light">Dream Journal</h1>
-              <p className="text-sm text-muted-foreground">Jungian Dream Analysis & Tarot Cards</p>
+              <h1 className="text-5xl font-light font-candy">Dream Journal</h1>
+              <p className="text-xl text-muted-foreground font-candy">Jungian Dream Analysis & Tarot Cards</p>
             </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => setShowApiKeyModal(true)}
+              className="font-sans"
             >
-              <Settings className="h-4 w-4 mr-2" />
+              <Settings className="h-5 w-5 mr-3" />
               API Settings
             </Button>
           </div>
@@ -177,27 +189,20 @@ const Index = () => {
 
         {/* View Dream Dialog */}
         <AlertDialog open={!!viewingDream} onOpenChange={() => setViewingDream(null)}>
-          <AlertDialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
+          <AlertDialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+            <AlertDialogHeader className="pb-6">
+              <AlertDialogTitle className="flex items-center gap-3 text-2xl font-sans">
+                <Sparkles className="h-6 w-6 text-primary" />
                 Dream Analysis
               </AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-lg font-sans">
                 Recorded on {viewingDream && new Date(viewingDream.createdAt).toLocaleDateString()}
               </AlertDialogDescription>
             </AlertDialogHeader>
             
             {viewingDream && (
               <DreamAnalysis 
-                analysis={{
-                  analysis: viewingDream.analysis,
-                  jungianInterpretation: "This dream contains archetypal elements worth exploring.",
-                  symbols: ["Extracted from original analysis"],
-                  archetypes: ["Universal patterns"],
-                  emotions: ["Complex emotional undercurrents"],
-                  suggestions: ["Reflect on the dream's significance"]
-                }}
+                analysis={viewingDream.analysis}
                 dreamContent={viewingDream.content}
               />
             )}
@@ -205,51 +210,51 @@ const Index = () => {
         </AlertDialog>
 
         {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-card border border-border">
-            <TabsTrigger value="input" className="flex items-center gap-2">
-              <Moon className="h-4 w-4" />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-10">
+          <TabsList className="grid w-full grid-cols-3 bg-card border border-border h-16 text-lg">
+            <TabsTrigger value="input" className="flex items-center gap-3 px-6 font-sans">
+              <img src="/icon.png" alt="" className="h-5 w-5" />
               New Dream
             </TabsTrigger>
-            <TabsTrigger value="analysis" disabled={!currentAnalysis} className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
+            <TabsTrigger value="analysis" disabled={!currentAnalysis} className="flex items-center gap-3 px-6 font-sans">
+              <Sparkles className="h-5 w-5" />
               Analysis
             </TabsTrigger>
-            <TabsTrigger value="gallery" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
+            <TabsTrigger value="gallery" className="flex items-center gap-3 px-6 font-sans">
+              <BookOpen className="h-5 w-5" />
               Gallery ({dreams.length})
             </TabsTrigger>
           </TabsList>
 
           <AnimatePresence mode="wait">
-            <TabsContent value="input" className="space-y-6">
+            <TabsContent value="input" className="space-y-10">
               <DreamInput 
                 onSubmit={handleDreamSubmit}
                 isAnalyzing={isAnalyzing}
               />
             </TabsContent>
 
-            <TabsContent value="analysis" className="space-y-6">
+            <TabsContent value="analysis" className="space-y-10">
               {currentAnalysis && currentDream && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="space-y-8"
+                  className="space-y-12"
                 >
                   <DreamAnalysis 
                     analysis={currentAnalysis}
                     dreamContent={currentDream}
                   />
                   
-                  <div className="border-t border-border pt-8">
-                    <TarotCardGenerator
-                      dreamAnalysis={currentAnalysis.analysis}
-                      onCardGenerated={handleCardGenerated}
+                  <div className="border-t border-border pt-12">
+                    <DreamImageGenerator
+                      dreamAnalysis={currentAnalysis}
+                      onImageGenerated={handleImageGenerated}
                     />
                   </div>
 
-                  <div className="flex justify-center">
-                    <Button onClick={createNewDream} variant="outline">
+                  <div className="flex justify-center pt-8">
+                    <Button onClick={createNewDream} variant="outline" size="lg" className="px-8 py-3 text-lg font-sans">
                       Create Another Dream
                     </Button>
                   </div>
@@ -257,7 +262,7 @@ const Index = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="gallery" className="space-y-6">
+            <TabsContent value="gallery" className="space-y-10">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -269,9 +274,9 @@ const Index = () => {
                 />
                 
                 {dreams.length > 0 && (
-                  <div className="flex justify-center mt-8">
-                    <Button onClick={createNewDream} className="mystical-button">
-                      <Moon className="h-4 w-4 mr-2" />
+                  <div className="flex justify-center mt-12">
+                    <Button onClick={createNewDream} className="mystical-button px-8 py-3 text-lg font-sans" size="lg">
+                      <img src="/icon.png" alt="" className="h-5 w-5 mr-3" />
                       Record New Dream
                     </Button>
                   </div>
