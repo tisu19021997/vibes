@@ -6,4 +6,4 @@ Each application is an artifact of that process—an exploration of a different 
 
 ## The Worlds
 
-*   **Oneiroi:** A gentle place to save your dreams and explore their hidden meanings.
+*   **Oneiroi:** A gentle place to save your dreams and explore their hidden meanings. [Enter the dreamscape](https://oneiroi-dream.netlify.app/)
