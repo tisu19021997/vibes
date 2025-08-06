@@ -81,17 +81,17 @@ export const DreamInput: React.FC<DreamInputProps> = ({ onSubmit, isAnalyzing })
           transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
           className="inline-block"
         >
-          <img src="/icon.png" alt="Dream Journal" className="h-12 w-12 mx-auto" />
+          <img src="/icon.png" alt="Oneiroi" className="h-12 w-12 mx-auto" />
         </motion.div>
-        <h1 className="text-5xl font-light tracking-wide font-candy">Record Your Dream</h1>
+        <h1 className="text-5xl font-light tracking-wide font-candy">Share Your Dream</h1>
         <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-candy">
-          Capture the fragments of your dream world. What did you see? What did you feel?
+          Tell us what you saw and felt. Every detail matters.
         </p>
       </div>
 
       <Card className="p-6 space-y-4 max-w-3xl mx-auto">
         <Textarea
-          placeholder="I was floating in a calm, starlit sea..."
+          placeholder="I was walking through a peaceful garden..."
           value={dreamText}
           onChange={(e) => setDreamText(e.target.value)}
           className="min-h-[200px] resize-none text-base"
@@ -107,14 +107,14 @@ export const DreamInput: React.FC<DreamInputProps> = ({ onSubmit, isAnalyzing })
           >
             {isRecording ? <MicOff className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5" />}
           </Button>
-          <Button onClick={handleSubmit} disabled={!dreamText.trim() || isAnalyzing} className="font-sans">
+          <Button onClick={handleSubmit} disabled={!dreamText.trim() || isAnalyzing} className="font-sans" variant='default'>
             {isAnalyzing ? (
               <>
                 <Sparkles className="h-4 w-4 mr-2 animate-spin" />
-                Analyzing...
+                Creating...
               </>
             ) : (
-              "Analyze Dream"
+              "Create"
             )}
           </Button>
         </div>

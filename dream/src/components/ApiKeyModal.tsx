@@ -37,16 +37,16 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onApiKeySet, o
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Key className="h-5 w-5 text-primary" />
-            Configure Gemini API
+            Quick Setup
           </DialogTitle>
           <DialogDescription>
-            Enter your Google Gemini API key to enable dream analysis powered by AI.
+            Add your key so we can help create beautiful images from your dreams.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="apiKey">Gemini API Key</Label>
+            <Label htmlFor="apiKey">Your Key</Label>
             <Input
               id="apiKey"
               type="password"
@@ -60,23 +60,23 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onApiKeySet, o
           <Alert>
             <Shield className="h-4 w-4" />
             <AlertDescription>
-              Your API key is stored locally in your browser and never shared with our servers.
+              Your key stays safe on your device. We never see it.
             </AlertDescription>
           </Alert>
 
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Don't have an API key? Get one from Google AI Studio:
+              Need a key? Get one here:
             </p>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => window.open('https://makersuite.google.com/app/apikey', '_blank')}
+              onClick={() => window.open('https://aistudio.google.com/app/apikey', '_blank')}
               className="w-full"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Get Gemini API Key
+              Get Your Key
             </Button>
           </div>
 
@@ -89,7 +89,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onApiKeySet, o
               disabled={!apiKey.trim() || isLoading}
               className="flex-1"
             >
-              {isLoading ? 'Setting up...' : 'Save API Key'}
+              {isLoading ? 'Setting up...' : 'Save Key'}
             </Button>
           </div>
         </form>

@@ -1,62 +1,44 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Dream } from '@/types/dream';
-
-const STORAGE_KEY = 'oneiroi_dreams';
+import { APP_CONFIG } from '@/config/app';
 
 export const useDreamStorage = () => {
   const [dreams, setDreams] = useState<Dream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadDreams = useCallback(() => {
-    setIsLoading(true);
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsedData = JSON.parse(stored);
-        const parsedDreams = parsedData.map((dream: any) => ({
-          ...dream,
-          createdAt: new Date(dream.createdAt),
-          updatedAt: new Date(dream.updatedAt),
-          image: dream.image ? { ...dream.image, createdAt: new Date(dream.image.createdAt) } : undefined,
-        }));
-        setDreams(parsedDreams);
+  useEffect(() => {
+    const loadDreams = () => {
+      try {
+        const savedDreams = localStorage.getItem(APP_CONFIG.storage.dreams);
+        if (savedDreams) {
+          setDreams(JSON.parse(savedDreams));
+        }
+      } catch (error) {
+        console.error('Error loading dreams:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading dreams from localStorage:', error);
-      setDreams([]);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    loadDreams();
   }, []);
 
-  useEffect(() => {
-    loadDreams();
-  }, [loadDreams]);
-
   const saveDream = (dream: Dream) => {
-    try {
-      const updatedDreams = [dream, ...dreams.filter(d => d.id !== dream.id)];
-      setDreams(updatedDreams);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDreams));
-    } catch (error) {
-      console.error('Failed to save dream to localStorage:', error);
-    }
+    const updatedDreams = [dream, ...dreams];
+    setDreams(updatedDreams);
+    localStorage.setItem(APP_CONFIG.storage.dreams, JSON.stringify(updatedDreams));
   };
 
   const deleteDream = (dreamId: string) => {
-    try {
-      const updatedDreams = dreams.filter(d => d.id !== dreamId);
-      setDreams(updatedDreams);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDreams));
-    } catch (error) {
-      console.error('Failed to delete dream from localStorage:', error);
-    }
+    const updatedDreams = dreams.filter(dream => dream.id !== dreamId);
+    setDreams(updatedDreams);
+    localStorage.setItem(APP_CONFIG.storage.dreams, JSON.stringify(updatedDreams));
   };
 
   return {
     dreams,
-    isLoading,
     saveDream,
     deleteDream,
+    isLoading
   };
 };

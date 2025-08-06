@@ -54,7 +54,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
             >
               <Brain className="h-5 w-5 text-primary" />
             </motion.div>
-            <h3 className="text-lg font-medium">Dream Analysis</h3>
+            <h3 className="text-lg font-medium">What Your Dream Means</h3>
           </div>
           <p className="text-foreground leading-relaxed">
             {analysis.analysis}
@@ -73,7 +73,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
             >
               <Palette className="h-5 w-5 text-primary" />
             </motion.div>
-            <h3 className="text-lg font-medium">Jungian Insights</h3>
+            <h3 className="text-lg font-medium">Deeper Meaning</h3>
           </div>
           <p className="text-muted-foreground leading-relaxed">
             {analysis.jungianInterpretation}
@@ -81,7 +81,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
         </div>
       </Card>
 
-      {/* Symbols and Archetypes */}
+      {/* Symbols and Themes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="dream-card">
           <div className="space-y-4">
@@ -93,7 +93,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
               >
                 <Eye className="h-4 w-4 text-primary" />
               </motion.div>
-              Symbols
+              Things You Saw
             </h4>
             <div className="flex flex-wrap gap-2">
               {analysis.symbols.map((symbol, index) => (
@@ -122,7 +122,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
               >
                 <Brain className="h-4 w-4 text-primary" />
               </motion.div>
-              Archetypes
+              Feelings & Themes
             </h4>
             <div className="flex flex-wrap gap-2">
               {analysis.archetypes.map((archetype, index) => (
@@ -153,7 +153,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
             >
               <Heart className="h-4 w-4 text-primary" />
             </motion.div>
-            Emotional Undercurrents
+            How It Made You Feel
           </h4>
           <div className="flex flex-wrap gap-2">
             {analysis.emotions.map((emotion, index) => (
@@ -183,7 +183,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
             >
               <Lightbulb className="h-4 w-4 text-primary" />
             </motion.div>
-            Integration Suggestions
+            Ways to Remember
           </h4>
           <ul className="space-y-2">
             {analysis.suggestions.map((suggestion, index) => (

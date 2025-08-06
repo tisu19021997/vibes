@@ -32,9 +32,9 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
           <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
             <Calendar className="h-8 w-8 text-primary" />
           </div>
-          <h3 className="text-xl font-medium">Your Dream Journal is Empty</h3>
+          <h3 className="text-xl font-medium">No dreams yet</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
-            Record your first dream to begin your journey of self-discovery.
+            Add your first dream and start collecting beautiful memories.
           </p>
         </div>
       </motion.div>
@@ -45,13 +45,13 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-light">Dream Gallery</h2>
+          <h2 className="text-2xl font-light">My Dreams</h2>
           <Badge variant="outline">{dreams.length} Dreams</Badge>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search your dreams..."
+            placeholder="Find a dream..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -76,10 +76,10 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
             >
               <Card className="dream-card h-full flex flex-col p-4">
                 <div className="flex-1 space-y-4">
-                  {dream.image && (
+                  {dream.tarotCard?.imageUrl && (
                     <div className="aspect-square w-full">
                       <img
-                        src={dream.image.imageUrl}
+                        src={dream.tarotCard.imageUrl}
                         alt="Dream visualization"
                         className="w-full h-full object-cover rounded-md shadow-sm"
                       />

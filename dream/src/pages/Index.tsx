@@ -11,6 +11,7 @@ import { useDreamStorage } from '@/hooks/useDreamStorage';
 import { geminiService } from '@/services/geminiService';
 import { Dream, TarotCard, DreamAnalysisResponse, DreamImage, CARD_THEMES } from '@/types/dream';
 import { useToast } from '@/hooks/use-toast';
+import { APP_CONFIG, APP_NAME, APP_TAGLINE } from '@/config/app';
 import { Moon, Sparkles, BookOpen, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,16 +26,19 @@ const Index = () => {
   const { dreams, saveDream, deleteDream, isLoading } = useDreamStorage();
   const { toast } = useToast();
 
-  // Check if API key is set on mount
+  // Check if API key is set on mount and update document title
   useEffect(() => {
-    const savedApiKey = localStorage.getItem('gemini_api_key');
+    const savedApiKey = localStorage.getItem(APP_CONFIG.storage.apiKey);
     if (savedApiKey) {
       geminiService.setApiKey(savedApiKey);
     }
+    
+    // Update document title dynamically
+    document.title = APP_NAME;
   }, []);
 
   const handleDreamSubmit = async (dreamContent: string) => {
-    const savedApiKey = localStorage.getItem('gemini_api_key');
+    const savedApiKey = localStorage.getItem(APP_CONFIG.storage.apiKey);
     if (!savedApiKey) {
       setShowApiKeyModal(true);
       setCurrentDream(dreamContent);
@@ -50,14 +54,14 @@ const Index = () => {
       setActiveTab('analysis');
       
       toast({
-        title: "Dream Analyzed",
-        description: "Your dream has been analyzed using Jungian psychology principles.",
+        title: "Dream Saved",
+        description: "Your dream is now safely kept.",
       });
     } catch (error) {
       console.error('Error analyzing dream:', error);
       toast({
-        title: "Analysis Failed",
-        description: "Failed to analyze your dream. Please check your API key and try again.",
+        title: "Something went wrong",
+        description: "We couldn't create your dream. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -71,8 +75,8 @@ const Index = () => {
       localStorage.setItem('gemini_api_key', apiKey);
       
       toast({
-        title: "API Key Set",
-        description: "Gemini API key has been configured successfully.",
+        title: "Setup complete",
+        description: "You're all set to create beautiful dreams.",
       });
 
       // If there's a pending dream, analyze it now
@@ -88,35 +92,13 @@ const Index = () => {
     }
   };
 
-  const handleImageGenerated = (image: DreamImage) => {
+  const handleCardGenerated = async (card: TarotCard) => {
     if (!currentAnalysis) return;
 
-    // Convert DreamImage to TarotCard
-    const card: TarotCard = {
-      id: image.id,
-      imageUrl: image.imageUrl,
-      title: currentAnalysis.tarotCard.title,
-      subtitle: currentAnalysis.tarotCard.subtitle,
-      analysis: currentAnalysis.analysis,
-      theme: CARD_THEMES[0], // Default to minimal theme
-      createdAt: image.createdAt
-    };
-
-    const dream: Dream = {
-      id: `dream-${Date.now()}`,
-      content: currentDream,
-      analysis: currentAnalysis,
-      tarotCard: card,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    saveDream(dream);
-    setActiveTab('gallery');
-    
+    // Just show success toast - no automatic saving or tab switching
     toast({
-      title: "Dream Card Created",
-      description: "Your dream has been transformed into a beautiful tarot card.",
+      title: "Dream image created",
+      description: "Your beautiful dream image is ready! Click 'Save Dream to Collection' to keep it.",
     });
   };
 
@@ -127,8 +109,8 @@ const Index = () => {
   const handleDeleteDream = (dreamId: string) => {
     deleteDream(dreamId);
     toast({
-      title: "Dream Deleted",
-      description: "The dream has been removed from your gallery.",
+      title: "Dream removed",
+      description: "The dream has been removed from your collection.",
     });
   };
 
@@ -146,7 +128,7 @@ const Index = () => {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <img src="/icon.png" alt="Dream Journal" className="h-10 w-10" />
+          <img src="/icon.png" alt={APP_NAME} className={APP_CONFIG.ui.loadingIconSize.small} />
         </motion.div>
       </div>
     );
@@ -164,13 +146,13 @@ const Index = () => {
           <div className="flex items-center gap-5">
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: APP_CONFIG.ui.animationDuration, repeat: Infinity, ease: "linear" }}
             >
-              <img src="/icon.png" alt="Dream Journal" className="h-12 w-12" />
+              <img src="/icon.png" alt={APP_NAME} className={APP_CONFIG.ui.loadingIconSize.large} />
             </motion.div>
             <div>
-              <h1 className="text-5xl font-light font-candy">Dream Journal</h1>
-              <p className="text-xl text-muted-foreground font-candy">Jungian Dream Analysis & Tarot Cards</p>
+              <h1 className="text-5xl font-light font-candy">{APP_NAME}</h1>
+              <p className="text-xl text-muted-foreground font-candy">{APP_TAGLINE}</p>
             </div>
           </div>
           
@@ -182,7 +164,7 @@ const Index = () => {
               className="font-sans"
             >
               <Settings className="h-5 w-5 mr-3" />
-              API Settings
+              Setup
             </Button>
           </div>
         </motion.div>
@@ -193,7 +175,7 @@ const Index = () => {
             <AlertDialogHeader className="pb-6">
               <AlertDialogTitle className="flex items-center gap-3 text-2xl font-sans">
                 <Sparkles className="h-6 w-6 text-primary" />
-                Dream Analysis
+                Your Dream
               </AlertDialogTitle>
               <AlertDialogDescription className="text-lg font-sans">
                 Recorded on {viewingDream && new Date(viewingDream.createdAt).toLocaleDateString()}
@@ -214,27 +196,27 @@ const Index = () => {
           <TabsList className="grid w-full grid-cols-3 bg-card border border-border h-16 text-lg">
             <TabsTrigger value="input" className="flex items-center gap-3 px-6 font-sans">
               <img src="/icon.png" alt="" className="h-5 w-5" />
-              New Dream
+              Add Dream
             </TabsTrigger>
             <TabsTrigger value="analysis" disabled={!currentAnalysis} className="flex items-center gap-3 px-6 font-sans">
               <Sparkles className="h-5 w-5" />
-              Analysis
+              My Reading
             </TabsTrigger>
             <TabsTrigger value="gallery" className="flex items-center gap-3 px-6 font-sans">
               <BookOpen className="h-5 w-5" />
-              Gallery ({dreams.length})
+              My Dreams ({dreams.length})
             </TabsTrigger>
           </TabsList>
 
           <AnimatePresence mode="wait">
-            <TabsContent value="input" className="space-y-10">
+            <TabsContent key="input" value="input" className="space-y-10">
               <DreamInput 
                 onSubmit={handleDreamSubmit}
                 isAnalyzing={isAnalyzing}
               />
             </TabsContent>
 
-            <TabsContent value="analysis" className="space-y-10">
+            <TabsContent key="analysis" value="analysis" className="space-y-10">
               {currentAnalysis && currentDream && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -249,20 +231,28 @@ const Index = () => {
                   <div className="border-t border-border pt-12">
                     <DreamImageGenerator
                       dreamAnalysis={currentAnalysis}
-                      onImageGenerated={handleImageGenerated}
+                      dreamContent={currentDream}
+                      onCardGenerated={handleCardGenerated}
+                      onSaveDream={async (dream: Dream) => {
+                        await saveDream(dream);
+                        toast({
+                          title: "Dream saved!",
+                          description: "Your dream has been added to your collection.",
+                        });
+                      }}
                     />
                   </div>
 
                   <div className="flex justify-center pt-8">
                     <Button onClick={createNewDream} variant="outline" size="lg" className="px-8 py-3 text-lg font-sans">
-                      Create Another Dream
+                      Add Another Dream
                     </Button>
                   </div>
                 </motion.div>
               )}
             </TabsContent>
 
-            <TabsContent value="gallery" className="space-y-10">
+            <TabsContent key="gallery" value="gallery" className="space-y-10">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -277,7 +267,7 @@ const Index = () => {
                   <div className="flex justify-center mt-12">
                     <Button onClick={createNewDream} className="mystical-button px-8 py-3 text-lg font-sans" size="lg">
                       <img src="/icon.png" alt="" className="h-5 w-5 mr-3" />
-                      Record New Dream
+                      Save New Dream
                     </Button>
                   </div>
                 )}
