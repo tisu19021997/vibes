@@ -9,11 +9,17 @@ import { DreamGallery } from '@/components/DreamGallery';
 import { ApiKeyModal } from '@/components/ApiKeyModal';
 import { useDreamStorage } from '@/hooks/useDreamStorage';
 import { geminiService } from '@/services/geminiService';
+import { fluxService } from '@/services/fluxService';
 import { Dream, TarotCard, DreamAnalysisResponse, DreamImage, CARD_THEMES } from '@/types/dream';
 import { useToast } from '@/hooks/use-toast';
 import { APP_CONFIG, APP_NAME, APP_TAGLINE } from '@/config/app';
 import { Moon, Sparkles, BookOpen, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+interface ApiKeys {
+  gemini?: string;
+  flux?: string;
+}
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('input');
@@ -22,24 +28,36 @@ const Index = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [viewingDream, setViewingDream] = useState<Dream | null>(null);
+  const [apiKeys, setApiKeys] = useState<ApiKeys>({});
   
   const { dreams, saveDream, deleteDream, isLoading } = useDreamStorage();
   const { toast } = useToast();
 
-  // Check if API key is set on mount and update document title
+  // Check if API keys are set on mount and update document title
   useEffect(() => {
-    const savedApiKey = localStorage.getItem(APP_CONFIG.storage.apiKey);
-    if (savedApiKey) {
-      geminiService.setApiKey(savedApiKey);
+    const savedGeminiKey = localStorage.getItem('gemini_api_key');
+    const savedFluxKey = localStorage.getItem('flux_api_key');
+    
+    const keys: ApiKeys = {};
+    
+    if (savedGeminiKey) {
+      keys.gemini = savedGeminiKey;
+      geminiService.setApiKey(savedGeminiKey);
     }
+    
+    if (savedFluxKey) {
+      keys.flux = savedFluxKey;
+      fluxService.setApiKey(savedFluxKey);
+    }
+    
+    setApiKeys(keys);
     
     // Update document title dynamically
     document.title = APP_NAME;
   }, []);
 
   const handleDreamSubmit = async (dreamContent: string) => {
-    const savedApiKey = localStorage.getItem(APP_CONFIG.storage.apiKey);
-    if (!savedApiKey) {
+    if (!apiKeys.gemini) {
       setShowApiKeyModal(true);
       setCurrentDream(dreamContent);
       return;
@@ -69,24 +87,33 @@ const Index = () => {
     }
   };
 
-  const handleApiKeySet = async (apiKey: string) => {
+  const handleApiKeysSet = async (keys: ApiKeys) => {
     try {
-      geminiService.setApiKey(apiKey);
-      localStorage.setItem('gemini_api_key', apiKey);
+      if (keys.gemini) {
+        geminiService.setApiKey(keys.gemini);
+        localStorage.setItem('gemini_api_key', keys.gemini);
+      }
+      
+      if (keys.flux) {
+        fluxService.setApiKey(keys.flux);
+        localStorage.setItem('flux_api_key', keys.flux);
+      }
+      
+      setApiKeys(keys);
       
       toast({
         title: "Setup complete",
-        description: "You're all set to create beautiful dreams.",
+        description: "Your AI services are configured and ready to use.",
       });
 
-      // If there's a pending dream, analyze it now
-      if (currentDream) {
+      // If there's a pending dream, analyze it now (only if Gemini key is provided)
+      if (currentDream && keys.gemini) {
         handleDreamSubmit(currentDream);
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to configure API key.",
+        description: "Failed to configure API keys.",
         variant: "destructive",
       });
     }
@@ -233,6 +260,7 @@ const Index = () => {
                       dreamAnalysis={currentAnalysis}
                       dreamContent={currentDream}
                       onCardGenerated={handleCardGenerated}
+                      apiKeys={apiKeys}
                       onSaveDream={async (dream: Dream) => {
                         await saveDream(dream);
                         toast({
@@ -279,7 +307,7 @@ const Index = () => {
         {/* API Key Modal */}
         <ApiKeyModal
           isOpen={showApiKeyModal}
-          onApiKeySet={handleApiKeySet}
+          onApiKeysSet={handleApiKeysSet}
           onClose={() => setShowApiKeyModal(false)}
         />
       </div>
