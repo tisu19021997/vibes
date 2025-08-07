@@ -94,16 +94,28 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       let result: { imageBase64: string; suggestedTitle: string; suggestedSubtitle: string; imageUrl?: string };
       
       if (imageGenerator === 'flux') {
-        // Check if FLUX API key is available
+        // Check if both API keys are available for coordinated generation
         if (!apiKeys?.flux) {
           throw new Error('FLUX API key not configured. Please set up your FLUX API key.');
         }
+        if (!apiKeys?.gemini) {
+          throw new Error('Gemini API key not configured. Both Gemini and FLUX API keys are needed for FLUX image generation.');
+        }
         
-        // Set the API key and generate with FLUX
-        fluxService.setApiKey(apiKeys.flux);
-        result = await fluxService.generateDreamImage(
+        // Step 1: Use Gemini to prepare the optimized prompt
+        console.log('🎨 Step 1: Preparing optimized prompt with Gemini...');
+        geminiService.setApiKey(apiKeys.gemini);
+        const optimizedPrompt = await geminiService.prepareImagePrompt(
           dreamAnalysis,
-          selectedTheme.name,
+          selectedTheme.name
+        );
+        
+        // Step 2: Use FLUX to generate the image from the optimized prompt
+        console.log('🖼️ Step 2: Generating image with FLUX from optimized prompt...');
+        fluxService.setApiKey(apiKeys.flux);
+        result = await fluxService.generateImageFromPrompt(
+          optimizedPrompt,
+          dreamAnalysis,
           '2:3'
         );
       } else {

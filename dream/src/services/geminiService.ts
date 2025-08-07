@@ -536,6 +536,39 @@ Synthesize the visual concept into a single, comprehensive paragraph (under 280 
       throw new Error(`Failed to generate optimized tarot card: ${error.message}`);
     }
   }
+
+  async prepareImagePrompt(dreamAnalysis: DreamAnalysisResponse, theme: string): Promise<string> {
+    console.log('🎨 Preparing optimized prompt for external image generation...');
+    
+    if (!this.genAI) {
+      throw new Error('Gemini API key not configured for prompt preparation');
+    }
+
+    try {
+      // Stage 1: Generate detailed visual concept
+      console.log('🎨 Stage 1: Generating visual concept...');
+      const visualConcept = await this.generateVisualConcept(
+        dreamAnalysis.analysis,
+        dreamAnalysis.jungianInterpretation,
+        dreamAnalysis.symbols,
+        dreamAnalysis.archetypes,
+        dreamAnalysis.emotions,
+        dreamAnalysis.tarotCard,
+        theme
+      );
+
+      // Stage 2: Optimize the visual concept into API-ready prompt
+      console.log('🔧 Stage 2: Optimizing image generation prompt...');
+      const optimizedPrompt = await this.optimizeImagePrompt(visualConcept);
+
+      console.log('📝 Final optimized prompt prepared:', optimizedPrompt);
+      return optimizedPrompt;
+
+    } catch (error) {
+      console.error('❌ Error preparing image prompt:', error);
+      throw new Error(`Failed to prepare image prompt: ${error.message}`);
+    }
+  }
 }
 
 export const geminiService = new GeminiService();

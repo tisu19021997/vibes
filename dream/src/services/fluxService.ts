@@ -132,6 +132,55 @@ export class FluxService {
     }
   }
 
+  async generateImageFromPrompt(
+    optimizedPrompt: string,
+    dreamAnalysis: DreamAnalysisResponse,
+    aspectRatio: string = '2:3'
+  ): Promise<{ imageBase64: string; suggestedTitle: string; suggestedSubtitle: string; imageUrl?: string }> {
+    console.log('🎨 Starting FLUX image generation from optimized prompt...');
+    
+    if (!this.apiKey) {
+      throw new Error('FLUX API key not configured');
+    }
+
+    try {
+      console.log('📝 Using provided optimized prompt:', optimizedPrompt.substring(0, 200) + '...');
+
+      // Step 1: Create the image generation request
+      const generateRequest: FluxGenerateRequest = {
+        prompt: optimizedPrompt,
+        aspect_ratio: aspectRatio,
+        output_format: 'png',
+        prompt_upsampling: false,
+        safety_tolerance: 2,
+      };
+
+      console.log('🚀 Sending FLUX generation request...');
+      const generateResponse = await this.makeRequest<FluxGenerateResponse>('/flux-kontext-pro', {
+        method: 'POST',
+        body: JSON.stringify(generateRequest),
+      });
+
+      console.log('✅ FLUX generation request sent, task ID:', generateResponse.id);
+
+      // Step 2: Poll for the result
+      const result = await this.pollForResult(generateResponse.id);
+
+      console.log('✅ FLUX image generation completed successfully');
+
+      return {
+        imageBase64: result.imageBase64,
+        imageUrl: result.imageUrl, // Fallback URL if base64 conversion failed
+        suggestedTitle: dreamAnalysis.tarotCard?.title || 'Dream Vision',
+        suggestedSubtitle: dreamAnalysis.tarotCard?.subtitle || 'A Journey Through the Unconscious'
+      };
+
+    } catch (error) {
+      console.error('❌ Error in FLUX image generation from prompt:', error);
+      throw new Error(`Failed to generate FLUX image from prompt: ${error.message}`);
+    }
+  }
+
   private async pollForResult(taskId: string, maxAttempts: number = 30, delayMs: number = 2000): Promise<{ imageBase64: string; imageUrl?: string }> {
     console.log(`⏳ Starting to poll for FLUX result, task ID: ${taskId}`);
     
