@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Download, Palette, Sparkles, Save, Zap, Maximize2, X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { CARD_THEMES, CardTheme, TarotCard, DreamAnalysisResponse, Dream } from '@/types/dream';
+import { CARD_THEMES, TarotCard, DreamAnalysisResponse, Dream } from '@/types/dream';
 import { format } from 'date-fns';
 import { geminiService } from '@/services/geminiService';
 import { fluxService } from '@/services/fluxService';
@@ -33,7 +33,8 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
   onSaveDream,
   apiKeys 
 }) => {
-  const [selectedTheme, setSelectedTheme] = useState<CardTheme>(CARD_THEMES[0]);
+  const [isCustomTheme, setIsCustomTheme] = useState<boolean>(false);
+  const [themeName, setThemeName] = useState<string>(CARD_THEMES[0] || 'Minimal');
   const [cardTitle, setCardTitle] = useState('');
   const [cardSubtitle, setCardSubtitle] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -99,7 +100,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       console.log('🎨 Step 1: Preparing optimized prompt with Gemini...');
       const optimizedPrompt = await geminiService.prepareImagePrompt(
         dreamAnalysis,
-        selectedTheme.name
+        themeName
       );
       
       // Step 2: Use FLUX to generate the image from the optimized prompt
@@ -133,7 +134,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         id: `card-${Date.now()}`,
         imageUrl,
         cdnPublicId: publicId,
-        theme: selectedTheme,
+        theme: themeName,
         title: cardTitle || result.suggestedTitle,
         subtitle: cardSubtitle || result.suggestedSubtitle,
         analysis: dreamAnalysis.analysis, // This is the main analysis text
@@ -177,16 +178,16 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       <svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:${selectedTheme.primaryColor};stop-opacity:1" />
-            <stop offset="100%" style="stop-color:${selectedTheme.secondaryColor};stop-opacity:1" />
+            <stop offset="0%" style="stop-color:#222222;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e5e5e5;stop-opacity:1" />
           </linearGradient>
           <linearGradient id="textBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#000000;stop-opacity:0.3" />
             <stop offset="100%" style="stop-color:#000000;stop-opacity:0.1" />
           </linearGradient>
           <pattern id="texture" patternUnits="userSpaceOnUse" width="40" height="40">
-            <rect width="40" height="40" fill="${selectedTheme.accentColor}" opacity="0.08"/>
-            <circle cx="20" cy="20" r="1" fill="${selectedTheme.secondaryColor}" opacity="0.2"/>
+            <rect width="40" height="40" fill="#a855f7" opacity="0.08"/>
+            <circle cx="20" cy="20" r="1" fill="#e5e5e5" opacity="0.2"/>
           </pattern>
           <filter id="textShadow">
             <feDropShadow dx="1" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.5"/>
@@ -198,86 +199,86 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         <rect width="400" height="600" fill="url(#texture)"/>
         
         <!-- Enhanced Border -->
-        <rect x="10" y="10" width="380" height="580" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="2" rx="12" opacity="0.8"/>
-        <rect x="20" y="20" width="360" height="560" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="1" rx="8" opacity="0.6"/>
+        <rect x="10" y="10" width="380" height="580" fill="none" stroke="#a855f7" stroke-width="2" rx="12" opacity="0.8"/>
+        <rect x="20" y="20" width="360" height="560" fill="none" stroke="#a855f7" stroke-width="1" rx="8" opacity="0.6"/>
         
         <!-- Title Area with Background -->
         <rect x="30" y="40" width="340" height="90" fill="url(#textBg)" rx="8"/>
-        <rect x="30" y="40" width="340" height="90" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="1" rx="8" opacity="0.4"/>
+        <rect x="30" y="40" width="340" height="90" fill="none" stroke="#a855f7" stroke-width="1" rx="8" opacity="0.4"/>
         
         <!-- Main Title with Shadow -->
-        <text x="200" y="75" font-family="${selectedTheme.fontFamily}" font-size="26" fill="#000000" text-anchor="middle" font-weight="700" opacity="0.3">
+        <text x="200" y="75" font-family="serif" font-size="26" fill="#000000" text-anchor="middle" font-weight="700" opacity="0.3">
           ${cardTitle || 'My Dream'}
         </text>
-        <text x="200" y="73" font-family="${selectedTheme.fontFamily}" font-size="26" fill="${selectedTheme.accentColor}" text-anchor="middle" font-weight="700">
+        <text x="200" y="73" font-family="serif" font-size="26" fill="#a855f7" text-anchor="middle" font-weight="700">
           ${cardTitle || 'My Dream'}
         </text>
         
         <!-- Subtitle with Shadow -->
-        <text x="200" y="105" font-family="${selectedTheme.fontFamily}" font-size="14" fill="#000000" text-anchor="middle" opacity="0.4">
+        <text x="200" y="105" font-family="serif" font-size="14" fill="#000000" text-anchor="middle" opacity="0.4">
           ${cardSubtitle || format(new Date(), 'MMM d, yyyy')}
         </text>
-        <text x="200" y="103" font-family="${selectedTheme.fontFamily}" font-size="14" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.9">
+        <text x="200" y="103" font-family="serif" font-size="14" fill="#a855f7" text-anchor="middle" opacity="0.9">
           ${cardSubtitle || format(new Date(), 'MMM d, yyyy')}
         </text>
         
         <!-- Central Symbol Area with Enhanced Background -->
         <rect x="60" y="150" width="280" height="260" fill="url(#textBg)" rx="12"/>
-        <rect x="60" y="150" width="280" height="260" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="1" rx="12" opacity="0.3"/>
+        <rect x="60" y="150" width="280" height="260" fill="none" stroke="#a855f7" stroke-width="1" rx="12" opacity="0.3"/>
         
         <!-- Decorative circles -->
-        <circle cx="200" cy="280" r="80" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="2" opacity="0.4"/>
-        <circle cx="200" cy="280" r="60" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="1" opacity="0.6"/>
-        <circle cx="200" cy="280" r="40" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="1" opacity="0.3"/>
+        <circle cx="200" cy="280" r="80" fill="none" stroke="#a855f7" stroke-width="2" opacity="0.4"/>
+        <circle cx="200" cy="280" r="60" fill="none" stroke="#a855f7" stroke-width="1" opacity="0.6"/>
+        <circle cx="200" cy="280" r="40" fill="none" stroke="#a855f7" stroke-width="1" opacity="0.3"/>
         
         <!-- Central Symbol Enhanced -->
         <text x="200" y="295" font-family="serif" font-size="48" fill="#000000" text-anchor="middle" opacity="0.3">◈</text>
-        <text x="200" y="292" font-family="serif" font-size="48" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.9">◈</text>
+        <text x="200" y="292" font-family="serif" font-size="48" fill="#a855f7" text-anchor="middle" opacity="0.9">◈</text>
         
         <!-- Symbols Section Enhanced -->
-        <text x="200" y="340" font-family="${selectedTheme.fontFamily}" font-size="12" fill="#000000" text-anchor="middle" opacity="0.4" font-weight="500">
+        <text x="200" y="340" font-family="serif" font-size="12" fill="#000000" text-anchor="middle" opacity="0.4" font-weight="500">
           ${dreamAnalysis.symbols.slice(0, 3).join(' • ')}
         </text>
-        <text x="200" y="338" font-family="${selectedTheme.fontFamily}" font-size="12" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.9" font-weight="500">
+        <text x="200" y="338" font-family="serif" font-size="12" fill="#a855f7" text-anchor="middle" opacity="0.9" font-weight="500">
           ${dreamAnalysis.symbols.slice(0, 3).join(' • ')}
         </text>
         
         <!-- Bottom Analysis Section -->
         <rect x="30" y="430" width="340" height="140" fill="url(#textBg)" rx="8"/>
-        <rect x="30" y="430" width="340" height="140" fill="none" stroke="${selectedTheme.accentColor}" stroke-width="1" rx="8" opacity="0.4"/>
+        <rect x="30" y="430" width="340" height="140" fill="none" stroke="#a855f7" stroke-width="1" rx="8" opacity="0.4"/>
         
         <!-- Dream Analysis Label -->
-        <text x="200" y="455" font-family="${selectedTheme.fontFamily}" font-size="12" fill="#000000" text-anchor="middle" opacity="0.4" font-weight="600" letter-spacing="2px">
+        <text x="200" y="455" font-family="serif" font-size="12" fill="#000000" text-anchor="middle" opacity="0.4" font-weight="600" letter-spacing="2px">
           DREAM ANALYSIS
         </text>
-        <text x="200" y="453" font-family="${selectedTheme.fontFamily}" font-size="12" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.9" font-weight="600" letter-spacing="2px">
+        <text x="200" y="453" font-family="serif" font-size="12" fill="#a855f7" text-anchor="middle" opacity="0.9" font-weight="600" letter-spacing="2px">
           DREAM ANALYSIS
         </text>
         
         <!-- Archetypes -->
-        <text x="200" y="480" font-family="${selectedTheme.fontFamily}" font-size="11" fill="#000000" text-anchor="middle" opacity="0.4" font-weight="500">
+        <text x="200" y="480" font-family="serif" font-size="11" fill="#000000" text-anchor="middle" opacity="0.4" font-weight="500">
           ${dreamAnalysis.archetypes.slice(0, 2).join(' • ')}
         </text>
-        <text x="200" y="478" font-family="${selectedTheme.fontFamily}" font-size="11" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.8" font-weight="500">
+        <text x="200" y="478" font-family="serif" font-size="11" fill="#a855f7" text-anchor="middle" opacity="0.8" font-weight="500">
           ${dreamAnalysis.archetypes.slice(0, 2).join(' • ')}
         </text>
         
         <!-- Analysis Preview (first few words) -->
-        <text x="200" y="510" font-family="${selectedTheme.fontFamily}" font-size="9" fill="#000000" text-anchor="middle" opacity="0.3">
+        <text x="200" y="510" font-family="serif" font-size="9" fill="#000000" text-anchor="middle" opacity="0.3">
           ${dreamAnalysis.analysis.split(' ').slice(0, 8).join(' ')}...
         </text>
-        <text x="200" y="508" font-family="${selectedTheme.fontFamily}" font-size="9" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.7">
+        <text x="200" y="508" font-family="serif" font-size="9" fill="#a855f7" text-anchor="middle" opacity="0.7">
           ${dreamAnalysis.analysis.split(' ').slice(0, 8).join(' ')}...
         </text>
         
         <!-- Decorative Elements -->
-        <circle cx="80" cy="180" r="2" fill="${selectedTheme.accentColor}" opacity="0.6"/>
-        <circle cx="320" cy="180" r="2" fill="${selectedTheme.accentColor}" opacity="0.6"/>
-        <circle cx="80" cy="380" r="2" fill="${selectedTheme.accentColor}" opacity="0.6"/>
-        <circle cx="320" cy="380" r="2" fill="${selectedTheme.accentColor}" opacity="0.6"/>
+        <circle cx="80" cy="180" r="2" fill="#a855f7" opacity="0.6"/>
+        <circle cx="320" cy="180" r="2" fill="#a855f7" opacity="0.6"/>
+        <circle cx="80" cy="380" r="2" fill="#a855f7" opacity="0.6"/>
+        <circle cx="320" cy="380" r="2" fill="#a855f7" opacity="0.6"/>
         
         <!-- Footer -->
-        <text x="200" y="545" font-family="${selectedTheme.fontFamily}" font-size="8" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.6" letter-spacing="1px">
+        <text x="200" y="545" font-family="serif" font-size="8" fill="#a855f7" text-anchor="middle" opacity="0.6" letter-spacing="1px">
           THE SILENT CHRONICLE
         </text>
       </svg>
@@ -288,7 +289,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
     const newCard: TarotCard = {
       id: `card-${Date.now()}`,
       imageUrl: mockImageUrl,
-      theme: selectedTheme,
+      theme: themeName,
       title: cardTitle || 'My Dream',
       subtitle: cardSubtitle || format(new Date(), 'MMM d, yyyy'),
       analysis: dreamAnalysis.analysis, // This is the main analysis text
@@ -424,30 +425,40 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                 Style
               </Label>
               <Select
-                value={selectedTheme.id}
+                value={isCustomTheme ? 'custom' : themeName}
                 onValueChange={(value) => {
-                  const theme = CARD_THEMES.find(t => t.id === value) || CARD_THEMES[0];
-                  setSelectedTheme(theme);
+                  if (value === 'custom') {
+                    setIsCustomTheme(true);
+                  } else {
+                    setIsCustomTheme(false);
+                    setThemeName(value);
+                  }
                 }}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CARD_THEMES.map((theme) => (
-                    <SelectItem key={theme.id} value={theme.id}>
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-4 h-4 rounded-full"
-                          style={{ backgroundColor: theme.primaryColor }}
-                        />
-                        {theme.name}
-                      </div>
+                  {CARD_THEMES.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
                     </SelectItem>
                   ))}
+                  <SelectItem value="custom">Custom…</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {isCustomTheme && (
+              <div className="space-y-2">
+                <Label>Custom Style</Label>
+                <Input
+                  value={themeName}
+                  onChange={(e) => setThemeName(e.target.value)}
+                  placeholder="e.g. Dreamlike Watercolor"
+                  className="bg-background/50 border-border/50"
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
