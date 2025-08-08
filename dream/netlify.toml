@@ -4,6 +4,12 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/api/flux/*"
+  to = "https://api.bfl.ai/v1/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/flux-image"
   to = "/.netlify/functions/flux-image"
   status = 200

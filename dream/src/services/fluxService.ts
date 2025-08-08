@@ -38,7 +38,8 @@ interface FluxResultResponse {
 
 export class FluxService {
   private apiKey: string | null = null;
-  private baseUrl = import.meta.env.DEV ? '/api/flux' : 'https://api.bfl.ai/v1';
+  // Always route through our same-origin proxy to avoid CORS in production
+  private baseUrl = '/api/flux';
 
   setApiKey(key: string) {
     this.apiKey = key;
