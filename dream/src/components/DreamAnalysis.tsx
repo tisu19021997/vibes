@@ -25,59 +25,33 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
       className="space-y-6"
     >
       {/* Dream Content */}
-      <Card className="dream-card">
-        <div className="space-y-4">
+      <Card className="dream-card user-dream">
+        <div className="space-y-4 reading-wrap">
           <div className="flex items-center gap-2">
-            <motion.div
-              variants={iconVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Eye className="h-5 w-5 text-primary" />
-            </motion.div>
-            <h3 className="text-lg font-medium">Your Dream</h3>
+            <Badge variant="outline" className="uppercase tracking-wide text-xs bg-primary text-primary-foreground border-transparent">Your dream</Badge>
+            <h3 className="text-2xl font-normal text-foreground">The dream</h3>
           </div>
-          <p className="text-muted-foreground leading-relaxed italic">
-            "{dreamContent}"
-          </p>
+          <p className="dream-quote italic reading-prose">{dreamContent}</p>
         </div>
       </Card>
 
       {/* Main Analysis */}
       <Card className="dream-card">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <motion.div
-              variants={iconVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Brain className="h-5 w-5 text-primary" />
-            </motion.div>
-            <h3 className="text-lg font-medium">What Your Dream Means</h3>
-          </div>
-          <p className="text-foreground leading-relaxed">
+        <div className="space-y-4 reading-wrap">
+          <h3 className="text-2xl font-normal text-foreground">What the dream reveals</h3>
+          <div className="reading-prose text-muted-foreground">
             {analysis.analysis}
-          </p>
+          </div>
         </div>
       </Card>
 
       {/* Jungian Interpretation */}
       <Card className="dream-card">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <motion.div
-              variants={iconVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Palette className="h-5 w-5 text-primary" />
-            </motion.div>
-            <h3 className="text-lg font-medium">Deeper Meaning</h3>
-          </div>
-          <p className="text-muted-foreground leading-relaxed">
+        <div className="space-y-4 reading-wrap">
+          <h3 className="text-2xl font-normal text-foreground">Deeper currents</h3>
+          <div className="reading-prose text-muted-foreground">
             {analysis.jungianInterpretation}
-          </p>
+          </div>
         </div>
       </Card>
 
@@ -85,16 +59,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="dream-card">
           <div className="space-y-4">
-            <h4 className="font-medium flex items-center gap-2">
-              <motion.div
-                variants={iconVariants}
-                whileHover="hover"
-                whileTap="tap"
-              >
-                <Eye className="h-4 w-4 text-primary" />
-              </motion.div>
-              Things You Saw
-            </h4>
+            <h4 className="text-xl font-normal text-foreground">Symbols that surfaced</h4>
             <div className="flex flex-wrap gap-2">
               {analysis.symbols.map((symbol, index) => (
                 <motion.div
@@ -103,7 +68,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Badge variant="outline" className="bg-primary/5 border-primary/20">
+                  <Badge variant="outline" className="bg-accent/5 border-accent/20">
                     {symbol}
                   </Badge>
                 </motion.div>
@@ -114,16 +79,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
 
         <Card className="dream-card">
           <div className="space-y-4">
-            <h4 className="font-medium flex items-center gap-2">
-              <motion.div
-                variants={iconVariants}
-                whileHover="hover"
-                whileTap="tap"
-              >
-                <Brain className="h-4 w-4 text-primary" />
-              </motion.div>
-              Feelings & Themes
-            </h4>
+            <h4 className="text-xl font-normal text-foreground">Emotions & motifs</h4>
             <div className="flex flex-wrap gap-2">
               {analysis.archetypes.map((archetype, index) => (
                 <motion.div
@@ -145,16 +101,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
       {/* Emotions */}
       <Card className="dream-card">
         <div className="space-y-4">
-          <h4 className="font-medium flex items-center gap-2">
-            <motion.div
-              variants={iconVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Heart className="h-4 w-4 text-primary" />
-            </motion.div>
-            How It Made You Feel
-          </h4>
+          <h4 className="text-xl font-normal text-foreground">Emotional echoes</h4>
           <div className="flex flex-wrap gap-2">
             {analysis.emotions.map((emotion, index) => (
               <motion.div
@@ -163,7 +110,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Badge variant="outline" className="bg-secondary/20 border-secondary/30">
+                <Badge variant="outline" className="bg-accent/5 border-accent/20">
                   {emotion}
                 </Badge>
               </motion.div>
@@ -175,16 +122,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
       {/* Suggestions */}
       <Card className="dream-card">
         <div className="space-y-4">
-          <h4 className="font-medium flex items-center gap-2">
-            <motion.div
-              variants={iconVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Lightbulb className="h-4 w-4 text-primary" />
-            </motion.div>
-            Ways to Remember
-          </h4>
+          <h4 className="text-xl font-normal text-foreground">Ways to keep it close</h4>
           <ul className="space-y-2">
             {analysis.suggestions.map((suggestion, index) => (
               <motion.li
@@ -192,7 +130,7 @@ export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamCon
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="text-sm text-muted-foreground flex items-start gap-2"
+                className="text-base text-foreground flex items-start gap-2"
               >
                 <span className="text-primary font-bold">•</span>
                 {suggestion}

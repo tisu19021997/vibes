@@ -45,8 +45,8 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-light">My Dreams</h2>
-          <Badge variant="outline">{dreams.length} Dreams</Badge>
+          <h2 className="text-2xl font-light">Archive</h2>
+          <Badge variant="outline">{dreams.length}</Badge>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -88,7 +88,7 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      {format(new Date(dream.createdAt), 'MMM dd, yyyy')}
+                      {format(new Date(dream.createdAt), 'MMM d, yyyy')}
                     </div>
                     <p className="text-sm line-clamp-3 leading-relaxed">{dream.content}</p>
                   </div>

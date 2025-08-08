@@ -194,7 +194,7 @@ export class FluxService {
     }
   }
 
-  private async pollForResult(taskId: string, maxAttempts: number = 30, delayMs: number = 2000): Promise<{ imageBase64: string; imageUrl?: string }> {
+  private async pollForResult(taskId: string, maxAttempts: number = 30, delayMs: number = 5000): Promise<{ imageBase64: string; imageUrl?: string }> {
     console.log(`⏳ Starting to poll for FLUX result, task ID: ${taskId}`);
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {

@@ -22,8 +22,8 @@ export default {
 				sans: ["var(--font-sans)"],
 				serif: ["var(--font-serif)"],
 				mono: ["var(--font-mono)"],
-				'candy': ['Noto Serif'],
-				'zen': ['Noto Serif']
+				candy: ['Newsreader'],
+				zen: ['Newsreader']
 			},
 			colors: {
 				border: "hsl(var(--border))",
@@ -118,5 +118,5 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;

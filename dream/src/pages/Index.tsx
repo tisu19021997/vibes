@@ -12,8 +12,11 @@ import { fluxService } from '@/services/fluxService';
 import { Dream, TarotCard, DreamAnalysisResponse, DreamImage, CARD_THEMES } from '@/types/dream';
 import { useToast } from '@/hooks/use-toast';
 import { APP_CONFIG, APP_NAME, APP_TAGLINE } from '@/config/app';
-import { Sparkles, BookOpen } from 'lucide-react';
+import { Sparkles, BookOpen, Download } from 'lucide-react';
+import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { sanitizeFileName } from '@/lib/utils';
 
 interface ApiKeys {
   gemini?: string;
@@ -30,6 +33,7 @@ const Index = () => {
     gemini: import.meta.env.VITE_GEMINI_API_KEY,
     flux: import.meta.env.VITE_FLUX_API_KEY,
   });
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
   
   const { dreams, saveDream, deleteDream, isLoading } = useDreamStorage();
   const { toast } = useToast();
@@ -105,6 +109,45 @@ const Index = () => {
     setActiveTab('input');
   };
 
+  const downloadImage = async (imageUrl: string, title?: string) => {
+    try {
+      const fileName = sanitizeFileName(`dream-card-${title || 'image'}`);
+
+      if (/res\.cloudinary\.com\//.test(imageUrl)) {
+        const withAttachment = imageUrl.replace(
+          /(\/image\/upload)(\/)/,
+          (_m, p1, p2) => `${p1}/fl_attachment:${fileName}${p2}`
+        );
+        const link = document.createElement('a');
+        link.href = withAttachment;
+        link.rel = 'noopener';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = `${fileName}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download failed:', error);
+      try {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = `dream-card-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (fallbackError) {
+        console.error('Final fallback also failed:', fallbackError);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -119,8 +162,9 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-8 py-16 max-w-8xl">
+    <div className="min-h-screen bg-background flex flex-col">
+      <main className="flex-1">
+        <div className="container mx-auto px-8 py-16 max-w-8xl">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -135,52 +179,92 @@ const Index = () => {
               <img src="/icon.png" alt={APP_NAME} className={APP_CONFIG.ui.loadingIconSize.large} />
             </motion.div>
             <div>
-              <h1 className="text-5xl font-light font-candy">{APP_NAME}</h1>
-              <p className="text-xl text-muted-foreground font-candy">{APP_TAGLINE}</p>
+              <h1 className="text-5xl font-light font-candy tracking-tight">{APP_NAME.toLowerCase()}</h1>
+              <p className="text-base text-muted-foreground font-sans">{APP_TAGLINE.toLowerCase()}</p>
             </div>
           </div>
           
           <div className="flex gap-3">
-            {/* Setup button removed since keys come from env */}
+            <Button onClick={createNewDream} className="mystical-button px-5 py-2 font-sans" size="sm">
+              New Dream
+            </Button>
           </div>
         </motion.div>
 
         {/* View Dream Dialog */}
         <AlertDialog open={!!viewingDream} onOpenChange={() => setViewingDream(null)}>
-          <AlertDialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
-            <AlertDialogHeader className="pb-6">
-              <AlertDialogTitle className="flex items-center gap-3 text-2xl font-sans">
-                <Sparkles className="h-6 w-6 text-primary" />
-                Your Dream
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-lg font-sans">
-                Recorded on {viewingDream && new Date(viewingDream.createdAt).toLocaleDateString()}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            
-            {viewingDream && (
-              <DreamAnalysis 
-                analysis={viewingDream.analysis}
-                dreamContent={viewingDream.content}
-              />
-            )}
+          <AlertDialogContent className="max-w-5xl">
+            <div className="max-h-[85vh] overflow-y-auto">
+              <AlertDialogHeader className="pb-6">
+                <AlertDialogDescription className="text-sm font-sans">
+                  {viewingDream && format(new Date(viewingDream.createdAt), 'MMM d, yyyy')}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              
+              {viewingDream && (
+                <div className={viewingDream.tarotCard?.imageUrl ? 'grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-8' : ''}>
+                  {viewingDream.tarotCard?.imageUrl && (
+                    <div className="xl:self-start">
+                      <div className="space-y-3 xl:sticky xl:top-8">
+                        <div className="relative aspect-[2/3] w-full max-w-[320px] mx-auto xl:mx-0">
+                          <img
+                            src={viewingDream.tarotCard.imageUrl}
+                            alt={viewingDream.tarotCard.title || 'Dream card'}
+                            className="w-full h-full object-cover rounded-md shadow-dream cursor-zoom-in"
+                            onClick={() => setIsImagePreviewOpen(true)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <DreamAnalysis 
+                    analysis={viewingDream.analysis}
+                    dreamContent={viewingDream.content}
+                  />
+                </div>
+              )}
+            </div>
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Image Fullscreen Preview */}
+        <Dialog open={isImagePreviewOpen} onOpenChange={setIsImagePreviewOpen}>
+          <DialogContent className="max-w-4xl">
+            {viewingDream?.tarotCard?.imageUrl && (
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', damping: 20 }}
+                className="relative w-full max-h-[75vh]"
+              >
+                <img
+                  src={viewingDream.tarotCard.imageUrl}
+                  alt={viewingDream.tarotCard.title || 'Dream card'}
+                  className="w-full h-auto max-h-[75vh] object-contain rounded-md"
+                />
+                <Button
+                  onClick={() => downloadImage(viewingDream.tarotCard!.imageUrl, viewingDream.tarotCard!.title)}
+                  variant="outline"
+                  className="absolute bottom-4 left-4"
+                >
+                  <Download className="h-4 w-4 mr-2" /> Download
+                </Button>
+              </motion.div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-10">
-          <TabsList className="grid w-full grid-cols-3 bg-card border border-border h-16 text-lg">
-            <TabsTrigger value="input" className="flex items-center gap-3 px-6 font-sans">
-              <img src="/icon.png" alt="" className="h-5 w-5" />
+          <TabsList className="grid w-full grid-cols-3 bg-transparent border-border h-12 text-sm">
+            <TabsTrigger value="input" className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none">
               Add Dream
             </TabsTrigger>
-            <TabsTrigger value="analysis" disabled={!currentAnalysis} className="flex items-center gap-3 px-6 font-sans">
-              <Sparkles className="h-5 w-5" />
+            <TabsTrigger value="analysis" disabled={!currentAnalysis} className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none">
               My Reading
             </TabsTrigger>
-            <TabsTrigger value="gallery" className="flex items-center gap-3 px-6 font-sans">
-              <BookOpen className="h-5 w-5" />
-              My Dreams ({dreams.length})
+            <TabsTrigger value="gallery" className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none">
+              Gallery ({dreams.length})
             </TabsTrigger>
           </TabsList>
 
@@ -197,34 +281,38 @@ const Index = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="space-y-12"
                 >
-                  <DreamAnalysis 
-                    analysis={currentAnalysis}
-                    dreamContent={currentDream}
-                  />
-                  
-                  <div className="border-t border-border pt-12">
-                    <DreamImageGenerator
-                      dreamAnalysis={currentAnalysis}
-                      dreamContent={currentDream}
-                      onCardGenerated={handleCardGenerated}
-                      apiKeys={apiKeys}
-                      onSaveDream={async (dream: Dream) => {
-                        await saveDream(dream);
-                        toast({
-                          title: "Dream saved!",
-                          description: "Your dream has been added to your collection.",
-                        });
-                      }}
-                    />
+                  <div className="grid grid-cols-1 xl:grid-cols-[1fr_520px] gap-10">
+                    {/* Reading column */}
+                    <div className="space-y-12">
+                      <DreamAnalysis 
+                        analysis={currentAnalysis}
+                        dreamContent={currentDream}
+                      />
+                    </div>
+
+                    {/* Sticky tools column */}
+                    <div>
+                      <div className="xl:sticky xl:top-8 space-y-12">
+                        <div className="border-t xl:border-0 border-border pt-12 xl:pt-0">
+                          <DreamImageGenerator
+                            dreamAnalysis={currentAnalysis}
+                            dreamContent={currentDream}
+                            onCardGenerated={handleCardGenerated}
+                            apiKeys={apiKeys}
+                            onSaveDream={async (dream: Dream) => {
+                              await saveDream(dream);
+                              toast({
+                                title: "Dream saved!",
+                                description: "Your dream has been added to your collection.",
+                              });
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex justify-center pt-8">
-                    <Button onClick={createNewDream} variant="outline" size="lg" className="px-8 py-3 text-lg font-sans">
-                      Add Another Dream
-                    </Button>
-                  </div>
                 </motion.div>
               )}
             </TabsContent>
@@ -239,21 +327,26 @@ const Index = () => {
                   onDeleteDream={handleDeleteDream}
                   onViewDream={handleViewDream}
                 />
-                
-                {dreams.length > 0 && (
-                  <div className="flex justify-center mt-12">
-                    <Button onClick={createNewDream} className="mystical-button px-8 py-3 text-lg font-sans" size="lg">
-                      <img src="/icon.png" alt="" className="h-5 w-5 mr-3" />
-                      Save New Dream
-                    </Button>
-                  </div>
-                )}
+
               </motion.div>
             </TabsContent>
           </AnimatePresence>
         </Tabs>
-
-      </div>
+        </div>
+      </main>
+      <footer className="h-16 border-t border-border">
+        <div className="container mx-auto px-8 h-full flex items-center justify-center">
+          <a
+            href="https://github.com/tisu19021997"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 font-sans"
+            aria-label="GitHub profile"
+          >
+            GitHub
+          </a>
+        </div>
+      </footer>
     </div>
   );
 };

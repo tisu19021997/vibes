@@ -2,8 +2,15 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Mic, MicOff, Moon, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Mic, MicOff, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+declare global {
+  interface Window {
+    webkitSpeechRecognition?: any;
+    SpeechRecognition?: any;
+  }
+}
 
 interface DreamInputProps {
   onSubmit: (dreamContent: string) => void;
@@ -75,17 +82,10 @@ export const DreamInput: React.FC<DreamInputProps> = ({ onSubmit, isAnalyzing })
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="text-center space-y-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-          className="inline-block"
-        >
-          <img src="/icon.png" alt="Oneiroi" className="h-12 w-12 mx-auto" />
-        </motion.div>
-        <h1 className="text-5xl font-light tracking-wide font-candy">Share Your Dream</h1>
-        <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-candy">
-          Tell us what you saw and felt. Every detail matters.
+      <div className="text-center space-y-3">
+        <h1 className="text-4xl font-light tracking-tight font-candy">Tell your dream</h1>
+        <p className="text-muted-foreground text-base max-w-2xl mx-auto font-sans">
+          Capture what unfolded and how it felt.
         </p>
       </div>
 
@@ -107,14 +107,14 @@ export const DreamInput: React.FC<DreamInputProps> = ({ onSubmit, isAnalyzing })
           >
             {isRecording ? <MicOff className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5" />}
           </Button>
-          <Button onClick={handleSubmit} disabled={!dreamText.trim() || isAnalyzing} className="font-sans" variant='default'>
+          <Button onClick={handleSubmit} disabled={!dreamText.trim() || isAnalyzing} className="font-sans mystical-button" variant='default'>
             {isAnalyzing ? (
               <>
                 <Sparkles className="h-4 w-4 mr-2 animate-spin" />
-                Creating...
+                Revealing...
               </>
             ) : (
-              "Create"
+              "Reveal"
             )}
           </Button>
         </div>

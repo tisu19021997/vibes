@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,57 +10,60 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 24 33.3333% 97.0588%;
-    --foreground: 0 0% 10.1961%;
-    --card: 24 33.3333% 97.0588%;
-    --card-foreground: 0 0% 10.1961%;
-    --popover: 24 33.3333% 97.0588%;
-    --popover-foreground: 0 0% 10.1961%;
-    --primary: 0 55.7789% 39.0196%;
+    /* Co–Star inspired monochrome palette */
+    --background: 0 0% 100%; /* pure white */
+    --foreground: 0 0% 7%;   /* near-black text */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    --primary: 0 0% 7%;      /* buttons, active */
     --primary-foreground: 0 0% 100%;
-    --secondary: 43.0769 90.6977% 91.5686%;
-    --secondary-foreground: 39.8438 100% 25.0980%;
-    --muted: 22.5000 21.0526% 92.5490%;
-    --muted-foreground: 33.3333 5.4545% 32.3529%;
-    --accent: 48.0000 96.4912% 88.8235%;
-    --accent-foreground: 0 62.8205% 30.5882%;
-    --destructive: 0 70% 35.2941%;
+    --secondary: 0 0% 98%;   /* subtle gray background areas */
+    --secondary-foreground: 0 0% 15%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 35%;
+    --accent: 0 0% 92%;    /* subtle neutral highlight for hovers */
+    --accent-foreground: 0 0% 7%;
+    --destructive: 0 72% 46%;
     --destructive-foreground: 0 0% 100%;
-    --border: 37.7143 63.6364% 89.2157%;
-    --input: 37.7143 63.6364% 89.2157%;
-    --ring: 0 55.7789% 39.0196%;
-    --chart-1: 0 73.7089% 41.7647%;
-    --chart-2: 0 55.7789% 39.0196%;
-    --chart-3: 0 62.8205% 30.5882%;
-    --chart-4: 25.9649 90.4762% 37.0588%;
-    --chart-5: 22.7273 82.5000% 31.3725%;
-    --sidebar: 22.5000 21.0526% 92.5490%;
-    --sidebar-foreground: 0 0% 10.1961%;
-    --sidebar-primary: 0 55.7789% 39.0196%;
+    --border: 0 0% 90%;      /* thin hairlines */
+    --input: 0 0% 90%;
+    --ring: 0 0% 7%;
+    --chart-1: 0 0% 7%;
+    --chart-2: 0 0% 25%;
+    --chart-3: 0 0% 45%;
+    --chart-4: 0 0% 65%;
+    --chart-5: 0 0% 85%;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 0 0% 7%;
+    --sidebar-primary: 0 0% 7%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 48.0000 96.4912% 88.8235%;
-    --sidebar-accent-foreground: 0 62.8205% 30.5882%;
-    --sidebar-border: 37.7143 63.6364% 89.2157%;
-    --sidebar-ring: 0 55.7789% 39.0196%;
-    --font-sans: Poppins, sans-serif;
-    --font-serif: Libre Baskerville, serif;
-    --font-mono: IBM Plex Mono, monospace;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 7%;
+    /* Type: serif-forward with supporting sans + mono */
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    --font-serif: Newsreader, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --radius: 0.375rem;
-    --shadow-2xs: 1px 1px 16px -2px hsl(0 63% 18% / 0.06);
-    --shadow-xs: 1px 1px 16px -2px hsl(0 63% 18% / 0.06);
-    --shadow-sm: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 1px 2px -3px hsl(0 63% 18% / 0.12);
-    --shadow: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 1px 2px -3px hsl(0 63% 18% / 0.12);
-    --shadow-md: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 2px 4px -3px hsl(0 63% 18% / 0.12);
-    --shadow-lg: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 4px 6px -3px hsl(0 63% 18% / 0.12);
-    --shadow-xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 8px 10px -3px hsl(0 63% 18% / 0.12);
-    --shadow-2xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.30);
+    /* Co–Star is largely flat; keep shadows extremely subtle or none */
+    --shadow-2xs: 0 0 0 1px hsl(var(--border));
+    --shadow-xs: 0 0 0 1px hsl(var(--border));
+    --shadow-sm: 0 0 0 1px hsl(var(--border));
+    --shadow: 0 0 0 1px hsl(var(--border));
+    --shadow-md: 0 0 0 1px hsl(var(--border));
+    --shadow-lg: 0 0 0 1px hsl(var(--border));
+    --shadow-xl: 0 0 0 1px hsl(var(--border));
+    --shadow-2xl: 0 0 0 1px hsl(var(--border));
     --tracking-normal: 0em;
     --spacing: 0.25rem;
 
-    /* Custom gradients updated for new color scheme */
-    --gradient-mystical: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    --gradient-ethereal: linear-gradient(180deg, hsl(var(--card)), hsl(var(--muted)));
-    --gradient-cosmic: radial-gradient(circle at center, hsl(var(--primary) / 0.03), transparent);
+    /* Minimal backgrounds (no heavy gradients) */
+    --gradient-mystical: linear-gradient(0deg, hsl(var(--primary)), hsl(var(--primary)));
+    --gradient-ethereal: linear-gradient(0deg, hsl(var(--card)), hsl(var(--card)));
+    --gradient-cosmic: none;
     
     /* Updated shadows */
     --shadow-dream: var(--shadow-xl);
@@ -71,41 +74,41 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 24 9.8039% 10%;
-    --foreground: 60 4.7619% 95.8824%;
-    --card: 12.0000 6.4935% 15.0980%;
-    --card-foreground: 60 4.7619% 95.8824%;
-    --popover: 12.0000 6.4935% 15.0980%;
-    --popover-foreground: 60 4.7619% 95.8824%;
-    --primary: 0 73.7089% 41.7647%;
-    --primary-foreground: 24 33.3333% 97.0588%;
-    --secondary: 22.7273 82.5000% 31.3725%;
-    --secondary-foreground: 48.0000 96.4912% 88.8235%;
-    --muted: 12.0000 6.4935% 15.0980%;
-    --muted-foreground: 24.0000 5.7471% 82.9412%;
-    --accent: 25.9649 90.4762% 37.0588%;
-    --accent-foreground: 48.0000 96.4912% 88.8235%;
-    --destructive: 0 84.2365% 60.1961%;
+    --background: 0 0% 6%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 6%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 0 0% 16%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 30 6.2500% 25.0980%;
-    --input: 30 6.2500% 25.0980%;
-    --ring: 0 73.7089% 41.7647%;
-    --chart-1: 0 90.6040% 70.7843%;
-    --chart-2: 0 84.2365% 60.1961%;
-    --chart-3: 0 72.2222% 50.5882%;
-    --chart-4: 43.2558 96.4126% 56.2745%;
-    --chart-5: 37.6923 92.1260% 50.1961%;
-    --sidebar: 24 9.8039% 10%;
-    --sidebar-foreground: 60 4.7619% 95.8824%;
-    --sidebar-primary: 0 73.7089% 41.7647%;
-    --sidebar-primary-foreground: 24 33.3333% 97.0588%;
-    --sidebar-accent: 25.9649 90.4762% 37.0588%;
-    --sidebar-accent-foreground: 48.0000 96.4912% 88.8235%;
-    --sidebar-border: 30 6.2500% 25.0980%;
-    --sidebar-ring: 0 73.7089% 41.7647%;
-    --font-sans: Poppins, sans-serif;
-    --font-serif: Libre Baskerville, serif;
-    --font-mono: IBM Plex Mono, monospace;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 96%;
+    --chart-1: 0 0% 96%;
+    --chart-2: 0 0% 70%;
+    --chart-3: 0 0% 50%;
+    --chart-4: 0 0% 35%;
+    --chart-5: 0 0% 20%;
+    --sidebar: 0 0% 6%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 0 0% 96%;
+    --sidebar-primary-foreground: 0 0% 6%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 0 0% 96%;
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    --font-serif: Newsreader, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --radius: 0.375rem;
     --shadow-2xs: 1px 1px 16px -2px hsl(0 63% 18% / 0.06);
     --shadow-xs: 1px 1px 16px -2px hsl(0 63% 18% / 0.06);
@@ -116,11 +119,11 @@ All colors MUST be HSL.
     --shadow-xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 8px 10px -3px hsl(0 63% 18% / 0.12);
     --shadow-2xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.30);
 
-    /* Updated gradients for dark theme */
-    --gradient-mystical: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    --gradient-ethereal: linear-gradient(180deg, hsl(var(--card)), hsl(var(--muted)));
-    --shadow-dream: var(--shadow-xl);
-    --shadow-card: var(--shadow-md);
+    /* Flat surfaces in dark */
+    --gradient-mystical: linear-gradient(0deg, hsl(var(--primary)), hsl(var(--primary)));
+    --gradient-ethereal: linear-gradient(0deg, hsl(var(--card)), hsl(var(--card)));
+    --shadow-dream: var(--shadow-xs);
+    --shadow-card: var(--shadow-xs);
   }
 
 
@@ -132,9 +135,9 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-candy;
+    @apply bg-background text-foreground font-serif;
     background: hsl(var(--background));
-    background-image: var(--gradient-cosmic);
+    letter-spacing: 0.01em;
   }
   
   /* Custom scrollbar */
@@ -157,27 +160,64 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  /* Reading-focused utilities */
+  .reading-wrap {
+    max-width: 72ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .reading-prose {
+    @apply prose prose-neutral dark:prose-invert;
+    max-width: 65ch;
+    font-family: var(--font-serif);
+    line-height: 1.75;
+    font-size: 1rem;
+  }
+
   .dream-card {
-    @apply bg-card border border-border rounded-xl p-6;
-    background: var(--gradient-ethereal);
-    box-shadow: var(--shadow-card);
-    transition: var(--transition-mystical);
+    @apply bg-card border border-border rounded-lg p-6;
+    background: hsl(var(--card));
+    box-shadow: none;
+    transition: color 0.2s ease, background-color 0.2s ease;
   }
   
   .dream-card:hover {
-    box-shadow: var(--shadow-dream);
-    transform: translateY(-2px);
+    background: hsl(var(--secondary));
   }
   
   .mystical-button {
-    @apply bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium font-sans;
-    background: var(--gradient-mystical);
-    transition: var(--transition-mystical);
-    box-shadow: var(--shadow-dream);
+    @apply bg-primary text-primary-foreground px-6 py-3 rounded-md font-normal font-sans tracking-wide;
+    background: hsl(var(--primary));
+    transition: background-color 0.2s ease, color 0.2s ease;
+    box-shadow: none;
   }
   
   .mystical-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 45px -15px hsl(var(--primary) / 0.25);
+    background: hsl(0 0% 0%);
+  }
+
+  /* User-authored dream emphasis */
+  .user-dream {
+    background: hsl(var(--accent));
+    border-color: hsl(var(--primary) / 0.15);
+  }
+
+  .dream-quote {
+    position: relative;
+    padding-left: 1rem;
+    color: hsl(var(--foreground));
+    line-height: 1.85;
+    font-size: 1.1rem;
+  }
+
+  .dream-quote::before {
+    content: "“";
+    position: absolute;
+    left: -0.25rem;
+    top: -0.5rem;
+    font-size: 3rem;
+    color: hsl(var(--primary) / 0.15);
+    line-height: 1;
   }
 }

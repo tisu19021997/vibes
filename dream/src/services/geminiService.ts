@@ -45,7 +45,7 @@ Capture 3-6 core emotional undercurrents:
 
 **6. INTEGRATION SUGGESTIONS (suggestions array)**
 Provide 3-5 practical, actionable suggestions:
-- Begin each with an action verb: "Reflect on...", "Journal about...", "Notice when..."
+- Begin each with an action verb: for example, "Reflect on...", "Journal about...", "Notice when...", etc.
 - Make suggestions specific and achievable
 - Connect directly to the dream's themes and symbols
 - Balance inner work with outer world applications

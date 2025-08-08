@@ -4,13 +4,15 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Download, Palette, Sparkles, Save, Zap } from 'lucide-react';
+import { Download, Palette, Sparkles, Save, Zap, Maximize2, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CARD_THEMES, CardTheme, TarotCard, DreamAnalysisResponse, Dream } from '@/types/dream';
 import { format } from 'date-fns';
 import { geminiService } from '@/services/geminiService';
 import { fluxService } from '@/services/fluxService';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { sanitizeFileName } from '@/lib/utils';
 
 
 interface TarotCardGeneratorProps {
@@ -38,6 +40,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
   const [isGeneratingNames, setIsGeneratingNames] = useState(false);
   const [previewCard, setPreviewCard] = useState<TarotCard | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const generateNameSuggestions = useCallback(async () => {
     if (!dreamAnalysis) return;
@@ -212,10 +215,10 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         
         <!-- Subtitle with Shadow -->
         <text x="200" y="105" font-family="${selectedTheme.fontFamily}" font-size="14" fill="#000000" text-anchor="middle" opacity="0.4">
-          ${cardSubtitle || format(new Date(), 'MMMM dd, yyyy')}
+          ${cardSubtitle || format(new Date(), 'MMM d, yyyy')}
         </text>
         <text x="200" y="103" font-family="${selectedTheme.fontFamily}" font-size="14" fill="${selectedTheme.accentColor}" text-anchor="middle" opacity="0.9">
-          ${cardSubtitle || format(new Date(), 'MMMM dd, yyyy')}
+          ${cardSubtitle || format(new Date(), 'MMM d, yyyy')}
         </text>
         
         <!-- Central Symbol Area with Enhanced Background -->
@@ -287,7 +290,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       imageUrl: mockImageUrl,
       theme: selectedTheme,
       title: cardTitle || 'My Dream',
-      subtitle: cardSubtitle || format(new Date(), 'MMMM dd, yyyy'),
+      subtitle: cardSubtitle || format(new Date(), 'MMM d, yyyy'),
       analysis: dreamAnalysis.analysis, // This is the main analysis text
       createdAt: new Date()
     };
@@ -305,7 +308,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
     if (!previewCard) return;
     
     try {
-      const fileName = `dream-card-${previewCard.title.toLowerCase().replace(/\s+/g, '-')}`;
+      const fileName = sanitizeFileName(`dream-card-${previewCard.title}`);
       const imageUrl = previewCard.imageUrl;
 
       // If hosted on Cloudinary, use attachment to suggest filename
@@ -404,14 +407,12 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-light">Summon Your Dream's Vision</h2>
-        <p className="text-muted-foreground">
-          Give form to the ethereal. Create a tangible artifact from your nocturnal journey.
-        </p>
+      <div className="text-left space-y-2">
+        <p className="text-muted-foreground text-sm">Turn this dream into something you can see.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,1fr)_minmax(320px,1fr)] xl:grid-cols-1 gap-8">
+        {/* On xl we rely on the page grid width; within this card keep it compact */}
         {/* Customization Panel */}
         <Card className="dream-card">
           <div className="space-y-6">
@@ -450,7 +451,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Dream's Title</Label>
+                <Label>Title</Label>
               </div>
               <Input
                 value={cardTitle}
@@ -462,11 +463,11 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label>A Fading Echo</Label>
+              <Label>Subtitle</Label>
               <Input
                 value={cardSubtitle}
                 onChange={(e) => setCardSubtitle(e.target.value)}
-                placeholder={format(new Date(), 'MMMM dd, yyyy')}
+                placeholder={format(new Date(), 'MMM d, yyyy')}
                 className="bg-background/50 border-border/50"
                 disabled={isGeneratingNames}
               />
@@ -510,10 +511,17 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         {/* Card Preview */}
         <Card className="dream-card">
           <div className="space-y-4">
-            <Label className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              Your Vision
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                Preview
+              </Label>
+              {previewCard && (
+                <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(true)} aria-label="Expand preview">
+                  <Maximize2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             
             {previewCard ? (
               <div className="space-y-4">
@@ -521,12 +529,13 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", damping: 20 }}
-                  className="relative max-w-sm mx-auto"
+                  className="relative w-full max-w-[32rem] xl:max-w-full mx-auto"
                 >
                   <img
                     src={previewCard.imageUrl}
                     alt={previewCard.title}
                     className="w-full h-full object-cover rounded-lg shadow-dream"
+                    onClick={() => setIsPreviewOpen(true)}
                   />
                 </motion.div>
                 
@@ -594,6 +603,34 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
             )}
           </div>
         </Card>
+
+        {/* Fullscreen preview */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between w-full">
+                <span className="font-light">Preview</span>
+              </DialogTitle>
+            </DialogHeader>
+            {previewCard && (
+              <div className="w-full max-h-[70vh]">
+                <img
+                  src={previewCard.imageUrl}
+                  alt={previewCard.title}
+                  className="w-full h-auto max-h-[70vh] object-contain rounded-md"
+                />
+              </div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button onClick={downloadCard} variant="outline">
+                <Download className="h-4 w-4 mr-2" /> Download PNG
+              </Button>
+              <Button onClick={() => setIsPreviewOpen(false)}>
+                <X className="h-4 w-4 mr-2" /> Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </motion.div>
   );
