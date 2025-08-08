@@ -131,10 +131,6 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       if (result.imageBase64) {
         // Convert base64 to data URL for display
         imageUrl = `data:image/png;base64,${result.imageBase64}`;
-      } else if (result.imageUrl) {
-        // Use direct URL (FLUX fallback case)
-        imageUrl = result.imageUrl;
-        console.log('🔗 Using direct FLUX image URL due to CORS limitations');
       } else {
         throw new Error('No image data received from the service');
       }

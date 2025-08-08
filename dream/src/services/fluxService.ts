@@ -32,8 +32,8 @@ interface FluxResultResponse {
     duration?: number;
   };
   progress?: number | null;
-  details?: any | null;
-  preview?: any | null;
+  details?: unknown | null;
+  preview?: unknown | null;
 }
 
 export class FluxService {
@@ -204,18 +204,9 @@ export class FluxService {
             if (result.result?.sample) {
               console.log('✅ FLUX image is ready! Attempting to download...');
               
-              try {
-                // Try to download and convert to base64
-                const imageBase64 = await this.downloadImageAsBase64(result.result.sample);
-                return { imageBase64 };
-              } catch (downloadError) {
-                console.log('⚠️ Base64 conversion failed, using direct URL:', downloadError.message);
-                // Fallback: return the direct URL for display
-                return { 
-                  imageBase64: '', // Empty base64 
-                  imageUrl: result.result.sample 
-                };
-              }
+              // Download and convert to base64 via server proxy only
+              const imageBase64 = await this.downloadImageAsBase64(result.result.sample);
+              return { imageBase64 };
             } else {
               throw new Error('Image generation completed but no image data received');
             }
@@ -263,65 +254,29 @@ export class FluxService {
   }
 
   private async downloadImage(imageUrl: string): Promise<Response> {
-    console.log('📥 Downloading image from FLUX URL...');
-    console.log('🔗 Original URL:', imageUrl);
-    
-    // Try multiple approaches to handle CORS
-    
-    // Approach 1: Try direct fetch first (sometimes FLUX allows it)
+    console.log('📥 Downloading image through server proxy...');
+    console.log('🔗 FLUX temporary URL:', imageUrl);
+
+    // Always use our server-side proxy to avoid CORS and expiring links
     try {
-      console.log('🎯 Attempting direct fetch...');
-      const response = await fetch(imageUrl, {
+      const proxyEndpoint = `/api/flux-image?url=${encodeURIComponent(imageUrl)}`;
+      const response = await fetch(proxyEndpoint, {
         method: 'GET',
-        mode: 'cors',
         headers: {
           'Accept': 'image/png,image/jpeg,image/*',
         },
       });
-      
-      if (response.ok) {
-        console.log('✅ Direct fetch successful');
-        return response;
+
+      if (!response.ok) {
+        throw new Error(`Proxy responded with ${response.status} ${response.statusText}`);
       }
-      
-      console.log('⚠️ Direct fetch failed:', response.status, response.statusText);
+
+      console.log('✅ Proxy fetch successful');
+      return response;
     } catch (error) {
-      console.log('⚠️ Direct fetch error:', error.message);
+      console.error('❌ Proxy fetch failed:', error);
+      throw new Error('Unable to download image through proxy.');
     }
-    
-    // Approach 2: Use proxy in development
-    if (import.meta.env.DEV) {
-      try {
-        // Properly encode the URL for proxy
-        const urlObj = new URL(imageUrl);
-        const proxyPath = `/api/flux-images${urlObj.pathname}${urlObj.search}`;
-        
-        console.log('🔄 Trying proxy URL:', proxyPath);
-        
-        const response = await fetch(proxyPath, {
-          method: 'GET',
-          headers: {
-            'Accept': 'image/png,image/jpeg,image/*',
-          },
-        });
-        
-        if (response.ok) {
-          console.log('✅ Proxy fetch successful');
-          return response;
-        }
-        
-        console.log('⚠️ Proxy fetch failed:', response.status, response.statusText);
-      } catch (error) {
-        console.log('⚠️ Proxy fetch error:', error.message);
-      }
-    }
-    
-    // If we get here, all methods failed - suggest alternative approaches
-    console.log('⚠️ All download methods failed. Falling back to direct image display.');
-    
-    // Instead of failing completely, let's use the image URL directly
-    // This works for display but won't work for base64 conversion
-    throw new Error('Unable to download image due to CORS restrictions. The image URL will be used directly for display.');
   }
 
   private async downloadImageAsBase64(imageUrl: string): Promise<string> {

@@ -499,8 +499,8 @@ Synthesize the visual concept into a single, comprehensive paragraph (under 280 
       console.log('✅ Received streaming response from image generation API');
 
       let imageBase64 = '';
-      let suggestedTitle = dreamAnalysis.tarotCard.title || 'Dream Vision';
-      let suggestedSubtitle = dreamAnalysis.tarotCard.subtitle || 'A Journey Through the Unconscious';
+      const suggestedTitle = dreamAnalysis.tarotCard.title || 'Dream Vision';
+      const suggestedSubtitle = dreamAnalysis.tarotCard.subtitle || 'A Journey Through the Unconscious';
 
       for await (const chunk of response) {
         if (!chunk.candidates || !chunk.candidates[0].content || !chunk.candidates[0].content.parts) {

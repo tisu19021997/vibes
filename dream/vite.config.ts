@@ -38,6 +38,48 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    // Dev-only middleware plugin to proxy FLUX images through same-origin
+    mode === 'development' && {
+      name: 'flux-image-proxy',
+      configureServer(server: import('vite').ViteDevServer) {
+        server.middlewares.use('/api/flux-image', async (req: import('http').IncomingMessage, res: import('http').ServerResponse) => {
+          try {
+            const urlObj = new URL(req.url || '', 'http://localhost');
+            const imageUrl = urlObj.searchParams.get('url');
+            if (!imageUrl) {
+              res.statusCode = 400;
+              res.end('Missing url parameter');
+              return;
+            }
+            const parsed = new URL(imageUrl);
+            const host = parsed.host.toLowerCase();
+            const isAllowed = host === 'bfl.ai' || host.endsWith('.bfl.ai');
+            if (!isAllowed) {
+              res.statusCode = 400;
+              res.end('Invalid host for image proxy');
+              return;
+            }
+            const upstream = await fetch(imageUrl, {
+              headers: { Accept: 'image/png,image/jpeg,image/*' },
+            });
+            if (!upstream.ok) {
+              res.statusCode = upstream.status;
+              res.end(await upstream.text().catch(() => 'Failed to fetch image'));
+              return;
+            }
+            const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            const arrayBuffer = await upstream.arrayBuffer();
+            res.end(Buffer.from(arrayBuffer));
+          } catch (e) {
+            res.statusCode = 500;
+            const message = (e as Error)?.message || 'Unknown error';
+            res.end(`Proxy error: ${message}`);
+          }
+        });
+      },
+    },
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
