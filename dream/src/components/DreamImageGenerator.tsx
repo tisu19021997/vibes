@@ -13,6 +13,7 @@ import { fluxService } from '@/services/fluxService';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { sanitizeFileName } from '@/lib/utils';
+import { getAnonIds, trackImageGenerated } from '@/services/analytics';
 
 
 interface TarotCardGeneratorProps {
@@ -114,6 +115,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       // Step 3: Upload to Cloudinary and get a permanent CDN URL
       console.log('☁️ Step 3: Uploading image to Cloudinary...');
       const dataUrl = `data:image/png;base64,${result.imageBase64}`;
+      const { userId, sessionId } = getAnonIds();
       const uploadResp = await fetch('/api/upload-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,6 +123,13 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
           dataUrl,
           folder: 'oneiroi/dreams',
           publicId: `dream_${Date.now()}`,
+          context: { userId, sessionId, title: cardTitle || result.suggestedTitle },
+          metadata: {
+            userId,
+            sessionId,
+            theme: themeName,
+            archetype: dreamAnalysis.archetypes?.[0] || '',
+          },
         }),
       });
       if (!uploadResp.ok) {
@@ -144,6 +153,9 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       setPreviewCard(newCard);
       onCardGenerated(newCard);
       
+      // Track generation
+      trackImageGenerated({ publicId, theme: themeName });
+
       toast({
         title: 'Your vision awaits!',
         description: "The dream has been given form. Behold the artifact it has become.",

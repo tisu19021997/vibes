@@ -35,6 +35,7 @@ export const APP_CONFIG = {
   storage: {
     apiKey: 'gemini_api_key',
     dreams: 'oneiroi_dreams',
+    userId: 'oneiroi_user_id',
   },
 } as const;
 

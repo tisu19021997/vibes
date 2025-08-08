@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { sanitizeFileName } from '@/lib/utils';
+import { identifyOnce } from '@/services/analytics';
 
 interface ApiKeys {
   gemini?: string;
@@ -47,6 +48,7 @@ const Index = () => {
       fluxService.setApiKey(apiKeys.flux);
     }
     document.title = APP_NAME;
+    identifyOnce();
   }, []);
 
   const handleDreamSubmit = async (dreamContent: string) => {
@@ -58,7 +60,8 @@ const Index = () => {
     setCurrentDream(dreamContent);
 
     try {
-      const analysis = await geminiService.analyzeDream({ dreamContent });
+      const previousDreams = dreams.slice(0, 5).map((d) => d.content);
+      const analysis = await geminiService.analyzeDream({ dreamContent, previousDreams });
       setCurrentAnalysis(analysis);
       setActiveTab('analysis');
       

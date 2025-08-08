@@ -14,6 +14,7 @@ You are an intuitive dream guide with deep knowledge of Carl Jung's analytical p
 - End with an empowering insight about growth or understanding
 - Use line breaks between paragraphs to make the text more readable
 - Never use markdown, only plain text and bullet points
+- If clear connections or recurring themes appear between the current dream and any of the previous dreams provided below, briefly mention that connection and what it might signify. If there is no meaningful connection, do not mention previous dreams.
 
 **2. JUNGIAN INSIGHTS (jungianInterpretation field)**
 Explore these specific elements:
@@ -72,10 +73,15 @@ Design a mystical tarot card that captures the dream's essence:
 - Balance psychological insight with spiritual wisdom
 - Avoid overwhelming jargon; make Jung accessible
 
+**OPTIONAL CONTEXT FROM PREVIOUS DREAMS (if provided):**
+- You may receive up to the last 5 previous dreams (most recent first).
+- Consider them only if helpful. Identify any recurring symbols, emotions, settings, or archetypal patterns.
+- If a meaningful connection emerges, weave a concise note about it in the MAIN INTERPRETATION. Otherwise, ignore this context.
+
 **OUTPUT FORMAT:**
 Return properly formatted JSON with all required fields. Ensure arrays contain strings, and the tarotCard object has both title and subtitle fields.
 
-Dream to analyze:
+Dreams to analyze:
 `;
 
 export class GeminiService {
@@ -108,8 +114,26 @@ export class GeminiService {
     }
 
     try {
-      const prompt = `${JUNG_PROMPT}\n\n"${request.dreamContent}"`;
+      // Prepare optional previous dreams block (truncate each to avoid overly long prompts)
+      const MAX_PREVIOUS = 5;
+      const MAX_CHARS_PER_DREAM = 1200;
+      const previousDreamsList = (request.previousDreams || [])
+        .slice(0, MAX_PREVIOUS)
+        .map((dream, index) => {
+          const trimmed = dream.length > MAX_CHARS_PER_DREAM
+            ? `${dream.slice(0, MAX_CHARS_PER_DREAM)}…`
+            : dream;
+          return `(${index + 1}) "${trimmed}"`;
+        })
+        .join('\n');
+
+      const previousBlock = previousDreamsList
+        ? `Previous dreams (most recent first):\n${previousDreamsList}\n\n`
+        : '';
+
+      const prompt = `${JUNG_PROMPT}\n${previousBlock}Current dream:\n"${request.dreamContent}"`;
       console.log('📝 Prepared prompt length:', prompt.length);
+      console.log('📚 Included previous dreams count:', request.previousDreams?.length || 0);
 
       const config = {
           temperature: 1.5,

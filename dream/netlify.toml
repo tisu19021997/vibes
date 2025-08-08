@@ -3,6 +3,12 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[blobs]
+  # Creates a store for anonymous analytics
+  # Netlify will provision this automatically on deploy
+  [[blobs.stores]]
+    name = "oneiroi-analytics"
+
 [[redirects]]
   from = "/api/flux/*"
   to = "https://api.bfl.ai/v1/:splat"
@@ -18,6 +24,18 @@
 [[redirects]]
   from = "/api/upload-image"
   to = "/.netlify/functions/upload-image"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/analytics"
+  to = "/.netlify/functions/analytics"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/analytics-view"
+  to = "/.netlify/functions/analytics-view"
   status = 200
   force = true
 

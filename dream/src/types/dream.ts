@@ -27,6 +27,8 @@ export interface DreamAnalysisRequest {
   dreamContent: string;
   userId?: string;
   includeJungianElements?: boolean;
+  // Up to the last 5 previous dreams' content (most recent first) to provide context
+  previousDreams?: string[];
 }
 
 export interface DreamAnalysisResponse {

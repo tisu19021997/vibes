@@ -1,8 +1,6 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Brain, Heart, Lightbulb, Palette, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DreamAnalysisResponse } from '@/types/dream';
 
@@ -12,11 +10,6 @@ interface DreamAnalysisProps {
 }
 
 export const DreamAnalysis: React.FC<DreamAnalysisProps> = ({ analysis, dreamContent }) => {
-  const iconVariants = {
-    hover: { scale: 1.1, rotate: 5 },
-    tap: { scale: 0.95 }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

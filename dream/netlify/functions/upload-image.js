@@ -33,7 +33,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { dataUrl, folder = 'oneiroi/dreams', publicId } = JSON.parse(event.body || '{}');
+    const { dataUrl, folder = 'oneiroi/dreams', publicId, context } = JSON.parse(event.body || '{}');
 
     if (!dataUrl || typeof dataUrl !== 'string') {
       return {
@@ -51,6 +51,8 @@ exports.handler = async (event) => {
       overwrite: true,
       // Ensure PNG output consistent with generator
       format: 'png',
+      // Tag with optional context for analytics (userId/sessionId)
+      context: context && typeof context === 'object' ? context : undefined,
     });
 
     return {
@@ -62,6 +64,7 @@ exports.handler = async (event) => {
         width: result.width,
         height: result.height,
         bytes: result.bytes,
+        context: result.context,
       }),
     };
   } catch (err) {
