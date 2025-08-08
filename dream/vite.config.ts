@@ -2,6 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+// @ts-ignore types may not resolve in config for dotenv
+import dotenv from "dotenv";
+
+// Load local .env for dev server (server-only, not exposed to client)
+dotenv.config();
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -76,6 +81,76 @@ export default defineConfig(({ mode }) => ({
             res.statusCode = 500;
             const message = (e as Error)?.message || 'Unknown error';
             res.end(`Proxy error: ${message}`);
+          }
+        });
+      },
+    },
+    // Dev-only middleware to upload images to Cloudinary without exposing secrets to the browser
+    mode === 'development' && {
+      name: 'cloudinary-upload-dev',
+      configureServer(server: import('vite').ViteDevServer) {
+        server.middlewares.use('/api/upload-image', async (req: import('http').IncomingMessage, res: import('http').ServerResponse) => {
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 204;
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+            res.end();
+            return;
+          }
+          if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.setHeader('Allow', 'POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.end('Method Not Allowed');
+            return;
+          }
+          try {
+            const chunks: Buffer[] = [];
+            await new Promise<void>((resolve, reject) => {
+              req.on('data', (c: Buffer) => chunks.push(c));
+              req.on('end', () => resolve());
+              req.on('error', (e) => reject(e));
+            });
+            const bodyStr = Buffer.concat(chunks).toString('utf-8');
+            const { dataUrl, folder = 'oneiroi/dreams', publicId } = JSON.parse(bodyStr || '{}');
+            if (!dataUrl || typeof dataUrl !== 'string') {
+              res.statusCode = 400;
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.end(JSON.stringify({ error: 'Missing or invalid dataUrl' }));
+              return;
+            }
+            // @ts-ignore cloudinary types may not be available in Vite config typecheck; runtime is fine
+            const { v2: cloudinary } = await import('cloudinary');
+            cloudinary.config({
+              cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+              api_key: process.env.CLOUDINARY_API_KEY,
+              api_secret: process.env.CLOUDINARY_API_SECRET,
+              secure: true,
+            });
+            const result = await cloudinary.uploader.upload(dataUrl, {
+              folder,
+              public_id: publicId,
+              resource_type: 'image',
+              overwrite: true,
+              format: 'png',
+            });
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.end(JSON.stringify({
+              secureUrl: result.secure_url,
+              publicId: result.public_id,
+              width: result.width,
+              height: result.height,
+              bytes: result.bytes,
+            }));
+          } catch (e) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            const message = (e as Error)?.message || 'Unknown error';
+            res.end(JSON.stringify({ error: message }));
           }
         });
       },

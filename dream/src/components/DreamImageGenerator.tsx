@@ -50,8 +50,8 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         setCardSubtitle(dreamAnalysis.tarotCard.subtitle);
         
         toast({
-          title: "Dream details added",
-          description: "We've filled in some lovely details for your dream.",
+          title: "The veil thins...",
+          description: "Whispers from the dream have filled the titles below.",
         });
       } else {
         // Fallback to default names if tarot card suggestions not available
@@ -59,14 +59,14 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         setCardSubtitle('A Beautiful Memory');
         
         toast({
-          title: "Details added",
-          description: "We've added some details. You can change them below.",
+          title: "A simple echo",
+          description: "We've added some details. You can refine them below.",
         });
       }
     } catch (error) {
       console.error('Error generating name suggestions:', error);
-              toast({
-          title: "Details added",
+      toast({
+          title: "A whisper lost",
           description: "We've added some simple details. You can change them.",
           variant: "destructive",
         });
@@ -107,18 +107,29 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         '2:3'
       );
       
-      // Handle image URL - prefer base64, fallback to direct URL
-      let imageUrl: string;
-      if (result.imageBase64) {
-        // Convert base64 to data URL for display
-        imageUrl = `data:image/png;base64,${result.imageBase64}`;
-      } else {
-        throw new Error('No image data received from the service');
+      // Step 3: Upload to Cloudinary and get a permanent CDN URL
+      console.log('☁️ Step 3: Uploading image to Cloudinary...');
+      const dataUrl = `data:image/png;base64,${result.imageBase64}`;
+      const uploadResp = await fetch('/api/upload-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dataUrl,
+          folder: 'oneiroi/dreams',
+          publicId: `dream_${Date.now()}`,
+        }),
+      });
+      if (!uploadResp.ok) {
+        const text = await uploadResp.text();
+        throw new Error(`Cloudinary upload failed: ${text}`);
       }
+      const { secureUrl, publicId } = await uploadResp.json();
+      const imageUrl = secureUrl as string;
       
       const newCard: TarotCard = {
         id: `card-${Date.now()}`,
-        imageUrl: imageUrl,
+        imageUrl,
+        cdnPublicId: publicId,
         theme: selectedTheme,
         title: cardTitle || result.suggestedTitle,
         subtitle: cardSubtitle || result.suggestedSubtitle,
@@ -130,15 +141,15 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       onCardGenerated(newCard);
       
       toast({
-        title: 'Your FLUX dream image is ready!',
-        description: "We've created something beautiful for you to keep.",
+        title: 'Your vision awaits!',
+        description: "The dream has been given form. Behold the artifact it has become.",
       });
       
     } catch (error) {
       console.error('Error generating FLUX card:', error);
       toast({
-        title: "Couldn't create image",
-        description: error.message || "Something went wrong. Please try again.",
+        title: "The vision is clouded",
+        description: error.message || "The ether was disturbed. Please try again.",
         variant: "destructive",
       });
       
@@ -285,8 +296,8 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
     onCardGenerated(newCard);
     
     toast({
-      title: "Dream image created",
-      description: "We've made a beautiful image with your dream details.",
+      title: "An echo of the dream",
+      description: "A fallback vision was created with your dream's essence.",
     });
   };
 
@@ -296,97 +307,34 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
     try {
       const fileName = `dream-card-${previewCard.title.toLowerCase().replace(/\s+/g, '-')}`;
       const imageUrl = previewCard.imageUrl;
-      
-      // Check if the image is already a base64 PNG (from AI generation)
-      if (imageUrl.startsWith('data:image/png;base64,')) {
-        console.log('Downloading AI-generated PNG image...');
-        
-        // Direct download of base64 PNG
+
+      // If hosted on Cloudinary, use attachment to suggest filename
+      if (/res\.cloudinary\.com\//.test(imageUrl)) {
+        // Insert fl_attachment:<filename> into the transformation part of the URL
+        // e.g. https://res.cloudinary.com/<cloud>/image/upload/v123/folder/id.png
+        //   -> https://res.cloudinary.com/<cloud>/image/upload/fl_attachment:dream-card-.../v123/folder/id.png
+        const withAttachment = imageUrl.replace(
+          /(\/image\/upload)(\/)/,
+          (_m, p1, p2) => `${p1}/fl_attachment:${fileName}${p2}`
+        );
         const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = `${fileName}.png`;
+        link.href = withAttachment;
+        link.rel = 'noopener';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        toast({
-          title: "Download complete",
-          description: "Your dream card has been saved as PNG.",
-        });
+        toast({ title: 'Downloading vision...', description: 'Your dream artifact is being transcribed.' });
         return;
       }
-      
-      // Handle SVG images (fallback cards) - convert to PNG
-      if (imageUrl.startsWith('data:image/svg+xml')) {
-        console.log('Converting SVG to PNG for download...');
-        
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        if (!ctx) {
-          throw new Error('Could not create canvas context');
-        }
-        
-        const img = new Image();
-        canvas.width = 400;
-        canvas.height = 600;
-        
-        // Set up success handler
-        img.onload = () => {
-          try {
-            ctx.drawImage(img, 0, 0);
-            
-            // Convert canvas to blob and download
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${fileName}.png`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                toast({
-                  title: "Download complete",
-                  description: "Your dream card has been saved as PNG.",
-                });
-              } else {
-                throw new Error('Failed to create image blob');
-              }
-            }, 'image/png', 1.0);
-          } catch (canvasError) {
-            console.error('Canvas conversion failed:', canvasError);
-            throw canvasError;
-          }
-        };
-        
-        // Set up error handler
-        img.onerror = (imgError) => {
-          console.error('Image load error:', imgError);
-          throw new Error('Failed to load image for conversion');
-        };
-        
-        // Set CORS to anonymous to handle data URLs properly
-        img.crossOrigin = 'anonymous';
-        img.src = imageUrl;
-        return;
-      }
-      
-      // Fallback for any other image type
-      console.log('Downloading image directly...');
+
+      // Otherwise just navigate to the URL (PNG data URLs will download in most browsers)
       const link = document.createElement('a');
       link.href = imageUrl;
       link.download = `${fileName}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      toast({
-        title: "Download complete",
-        description: "Your dream card has been downloaded.",
-      });
+      toast({ title: 'Downloading vision...', description: 'Your dream artifact is being transcribed.' });
       
     } catch (error) {
       console.error('Download failed:', error);
@@ -402,14 +350,14 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         document.body.removeChild(link);
         
         toast({
-          title: "Download complete (fallback)",
-          description: "Image downloaded successfully.",
+          title: "Transcription complete (fallback)",
+          description: "The vision was downloaded successfully.",
         });
       } catch (fallbackError) {
         console.error('Final fallback also failed:', fallbackError);
         toast({
-          title: "Download failed",
-          description: "Could not download the image. Please try right-clicking and saving the image manually.",
+          title: "Transcription failed",
+          description: "Could not transcribe the vision. Please try right-clicking and saving the image manually.",
           variant: "destructive"
         });
       }
@@ -434,15 +382,15 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       await onSaveDream(dreamToSave);
       
       toast({
-        title: "Dream saved!",
-        description: "Your dream and image have been saved to your collection.",
+        title: "Dream chronicled!",
+        description: "Your vision and its meaning have been saved to your private journal.",
       });
       
     } catch (error) {
       console.error('Failed to save dream:', error);
       toast({
-        title: "Save failed",
-        description: "Could not save your dream. Please try again.",
+        title: "Chronicle failed",
+        description: "Could not save your dream to the journal. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -457,9 +405,9 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       className="space-y-6"
     >
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-light">Create Your Dream Image</h2>
+        <h2 className="text-2xl font-light">Summon Your Dream's Vision</h2>
         <p className="text-muted-foreground">
-          Turn your dream into a beautiful image you can print and keep
+          Give form to the ethereal. Create a tangible artifact from your nocturnal journey.
         </p>
       </div>
 
@@ -472,7 +420,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Palette className="h-4 w-4 text-primary" />
-                Theme
+                Style
               </Label>
               <Select
                 value={selectedTheme.id}
@@ -502,19 +450,19 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Card Title</Label>
+                <Label>Dream's Title</Label>
               </div>
               <Input
                 value={cardTitle}
                 onChange={(e) => setCardTitle(e.target.value)}
-                placeholder="My Dream"
+                placeholder="The Silent Chronicle"
                 className="bg-background/50 border-border/50"
                 disabled={isGeneratingNames}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Subtitle</Label>
+              <Label>A Fading Echo</Label>
               <Input
                 value={cardSubtitle}
                 onChange={(e) => setCardSubtitle(e.target.value)}
@@ -547,12 +495,12 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                   >
                     <Zap className="h-4 w-4" />
                   </motion.div>
-                  Generating with FLUX...
+                  Conjuring your vision...
                 </motion.div>
               ) : (
                 <div className="flex items-center gap-2">
                   <Zap className="h-4 w-4" />
-                  Create with FLUX
+                  Summon
                 </div>
               )}
             </Button>
@@ -564,7 +512,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
           <div className="space-y-4">
             <Label className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              Preview
+              Your Vision
             </Label>
             
             {previewCard ? (
@@ -601,12 +549,12 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                         >
                           <Save className="h-4 w-4" />
                         </motion.div>
-                        Saving dream...
+                        Chronicling dream...
                       </motion.div>
                     ) : (
                       <div className="flex items-center gap-2">
                         <Save className="h-4 w-4" />
-                        Save Dream to Collection
+                        Chronicle this Dream
                       </div>
                     )}
                   </Button>
@@ -619,7 +567,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                       className="flex-1"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download PNG
+                      Transcribe (PNG)
                     </Button>
                     <Button
                       onClick={() => {
@@ -639,7 +587,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                 <div className="text-center space-y-2">
                   <Zap className="h-8 w-8 mx-auto text-muted-foreground/50" />
                   <p className="text-sm text-muted-foreground">
-                    Create your image to see it here
+                    Your vision will appear here
                   </p>
                 </div>
               </div>

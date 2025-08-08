@@ -10,6 +10,7 @@ export interface Dream {
 export interface TarotCard {
   id: string;
   imageUrl: string;
+  cdnPublicId?: string;
   theme: CardTheme;
   title: string;
   subtitle?: string;
