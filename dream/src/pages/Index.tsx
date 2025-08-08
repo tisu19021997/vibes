@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DreamInput } from '@/components/DreamInput';
 import { DreamAnalysis } from '@/components/DreamAnalysis';
 import { DreamImageGenerator } from '@/components/DreamImageGenerator';
 import { DreamGallery } from '@/components/DreamGallery';
-import { ApiKeyModal } from '@/components/ApiKeyModal';
 import { useDreamStorage } from '@/hooks/useDreamStorage';
 import { geminiService } from '@/services/geminiService';
 import { fluxService } from '@/services/fluxService';
 import { Dream, TarotCard, DreamAnalysisResponse, DreamImage, CARD_THEMES } from '@/types/dream';
 import { useToast } from '@/hooks/use-toast';
 import { APP_CONFIG, APP_NAME, APP_TAGLINE } from '@/config/app';
-import { Moon, Sparkles, BookOpen, Settings } from 'lucide-react';
+import { Sparkles, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ApiKeys {
@@ -26,41 +25,29 @@ const Index = () => {
   const [currentDream, setCurrentDream] = useState<string>('');
   const [currentAnalysis, setCurrentAnalysis] = useState<DreamAnalysisResponse | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [viewingDream, setViewingDream] = useState<Dream | null>(null);
-  const [apiKeys, setApiKeys] = useState<ApiKeys>({});
+  const [apiKeys, setApiKeys] = useState<ApiKeys>({
+    gemini: import.meta.env.VITE_GEMINI_API_KEY,
+    flux: import.meta.env.VITE_FLUX_API_KEY,
+  });
   
   const { dreams, saveDream, deleteDream, isLoading } = useDreamStorage();
   const { toast } = useToast();
 
-  // Check if API keys are set on mount and update document title
+  // Initialize API clients from env and update document title
   useEffect(() => {
-    const savedGeminiKey = localStorage.getItem('gemini_api_key');
-    const savedFluxKey = localStorage.getItem('flux_api_key');
-    
-    const keys: ApiKeys = {};
-    
-    if (savedGeminiKey) {
-      keys.gemini = savedGeminiKey;
-      geminiService.setApiKey(savedGeminiKey);
+    if (apiKeys.gemini) {
+      geminiService.setApiKey(apiKeys.gemini);
     }
-    
-    if (savedFluxKey) {
-      keys.flux = savedFluxKey;
-      fluxService.setApiKey(savedFluxKey);
+    if (apiKeys.flux) {
+      fluxService.setApiKey(apiKeys.flux);
     }
-    
-    setApiKeys(keys);
-    
-    // Update document title dynamically
     document.title = APP_NAME;
   }, []);
 
   const handleDreamSubmit = async (dreamContent: string) => {
     if (!apiKeys.gemini) {
-      setShowApiKeyModal(true);
-      setCurrentDream(dreamContent);
-      return;
+      throw new Error('Gemini API key missing. Please set VITE_GEMINI_API_KEY in your environment.');
     }
 
     setIsAnalyzing(true);
@@ -87,37 +74,7 @@ const Index = () => {
     }
   };
 
-  const handleApiKeysSet = async (keys: ApiKeys) => {
-    try {
-      if (keys.gemini) {
-        geminiService.setApiKey(keys.gemini);
-        localStorage.setItem('gemini_api_key', keys.gemini);
-      }
-      
-      if (keys.flux) {
-        fluxService.setApiKey(keys.flux);
-        localStorage.setItem('flux_api_key', keys.flux);
-      }
-      
-      setApiKeys(keys);
-      
-      toast({
-        title: "Setup complete",
-        description: "Your AI services are configured and ready to use.",
-      });
-
-      // If there's a pending dream, analyze it now (only if Gemini key is provided)
-      if (currentDream && keys.gemini) {
-        handleDreamSubmit(currentDream);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to configure API keys.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Removed API key modal flow; keys are read from env
 
   const handleCardGenerated = async (card: TarotCard) => {
     if (!currentAnalysis) return;
@@ -184,15 +141,7 @@ const Index = () => {
           </div>
           
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setShowApiKeyModal(true)}
-              className="font-sans"
-            >
-              <Settings className="h-5 w-5 mr-3" />
-              Setup
-            </Button>
+            {/* Setup button removed since keys come from env */}
           </div>
         </motion.div>
 
@@ -304,12 +253,6 @@ const Index = () => {
           </AnimatePresence>
         </Tabs>
 
-        {/* API Key Modal */}
-        <ApiKeyModal
-          isOpen={showApiKeyModal}
-          onApiKeysSet={handleApiKeysSet}
-          onClose={() => setShowApiKeyModal(false)}
-        />
       </div>
     </div>
   );

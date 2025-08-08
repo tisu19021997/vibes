@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Wand2, Download, Palette, Sparkles, RefreshCw, Save, Zap } from 'lucide-react';
+import { Download, Palette, Sparkles, Save, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CARD_THEMES, CardTheme, TarotCard, DreamAnalysisResponse, Dream } from '@/types/dream';
 import { format } from 'date-fns';
@@ -38,7 +38,6 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
   const [isGeneratingNames, setIsGeneratingNames] = useState(false);
   const [previewCard, setPreviewCard] = useState<TarotCard | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [imageGenerator, setImageGenerator] = useState<'gemini' | 'flux'>('gemini');
 
   const generateNameSuggestions = useCallback(async () => {
     if (!dreamAnalysis) return;
@@ -89,42 +88,24 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
     setIsGenerating(true);
     
     try {
-      console.log(`🎨 Starting ${imageGenerator.toUpperCase()} tarot card generation...`);
+      console.log('🎨 Starting FLUX tarot card generation...');
       
       let result: { imageBase64: string; suggestedTitle: string; suggestedSubtitle: string; imageUrl?: string };
       
-      if (imageGenerator === 'flux') {
-        // Check if both API keys are available for coordinated generation
-        if (!apiKeys?.flux) {
-          throw new Error('FLUX API key not configured. Please set up your FLUX API key.');
-        }
-        if (!apiKeys?.gemini) {
-          throw new Error('Gemini API key not configured. Both Gemini and FLUX API keys are needed for FLUX image generation.');
-        }
-        
-        // Step 1: Use Gemini to prepare the optimized prompt
-        console.log('🎨 Step 1: Preparing optimized prompt with Gemini...');
-        geminiService.setApiKey(apiKeys.gemini);
-        const optimizedPrompt = await geminiService.prepareImagePrompt(
-          dreamAnalysis,
-          selectedTheme.name
-        );
-        
-        // Step 2: Use FLUX to generate the image from the optimized prompt
-        console.log('🖼️ Step 2: Generating image with FLUX from optimized prompt...');
-        fluxService.setApiKey(apiKeys.flux);
-        result = await fluxService.generateImageFromPrompt(
-          optimizedPrompt,
-          dreamAnalysis,
-          '2:3'
-        );
-      } else {
-        // Use Gemini (existing functionality)
-        result = await geminiService.generateDreamImage(
-          dreamAnalysis,
-          selectedTheme.name
-        );
-      }
+      // Step 1: Use Gemini to prepare the optimized prompt
+      console.log('🎨 Step 1: Preparing optimized prompt with Gemini...');
+      const optimizedPrompt = await geminiService.prepareImagePrompt(
+        dreamAnalysis,
+        selectedTheme.name
+      );
+      
+      // Step 2: Use FLUX to generate the image from the optimized prompt
+      console.log('🖼️ Step 2: Generating image with FLUX from optimized prompt...');
+      result = await fluxService.generateImageFromPrompt(
+        optimizedPrompt,
+        dreamAnalysis,
+        '2:3'
+      );
       
       // Handle image URL - prefer base64, fallback to direct URL
       let imageUrl: string;
@@ -149,12 +130,12 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       onCardGenerated(newCard);
       
       toast({
-        title: `Your ${imageGenerator.toUpperCase()} dream image is ready!`,
+        title: 'Your FLUX dream image is ready!',
         description: "We've created something beautiful for you to keep.",
       });
       
     } catch (error) {
-      console.error(`Error generating ${imageGenerator} card:`, error);
+      console.error('Error generating FLUX card:', error);
       toast({
         title: "Couldn't create image",
         description: error.message || "Something went wrong. Please try again.",
@@ -486,51 +467,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         {/* Customization Panel */}
         <Card className="dream-card">
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Wand2 className="h-4 w-4 text-primary" />
-                AI Generator
-              </Label>
-              <Select
-                value={imageGenerator}
-                onValueChange={(value: 'gemini' | 'flux') => {
-                  setImageGenerator(value);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gemini" disabled={!apiKeys?.gemini}>
-                    <div className="flex items-center gap-3">
-                      <Sparkles className="h-4 w-4" />
-                      <div>
-                        <div>Gemini AI</div>
-                        <div className="text-xs text-muted-foreground">
-                          Artistic interpretations
-                        </div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="flux" disabled={!apiKeys?.flux}>
-                    <div className="flex items-center gap-3">
-                      <Zap className="h-4 w-4" />
-                      <div>
-                        <div>FLUX</div>
-                        <div className="text-xs text-muted-foreground">
-                          High-quality detailed images
-                        </div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {!apiKeys?.gemini && !apiKeys?.flux && (
-                <p className="text-xs text-muted-foreground text-amber-600">
-                  Please configure at least one AI service in settings
-                </p>
-              )}
-            </div>
+            {/* AI Generator selection removed; always using FLUX */}
 
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
@@ -593,8 +530,8 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                 isGenerating || 
                 isGeneratingNames || 
                 !cardTitle.trim() || 
-                (imageGenerator === 'gemini' && !apiKeys?.gemini) ||
-                (imageGenerator === 'flux' && !apiKeys?.flux)
+                !apiKeys?.gemini ||
+                !apiKeys?.flux
               }
               className="mystical-button w-full"
             >
@@ -608,14 +545,14 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   >
-                    {imageGenerator === 'flux' ? <Zap className="h-4 w-4" /> : <Wand2 className="h-4 w-4" />}
+                    <Zap className="h-4 w-4" />
                   </motion.div>
-                  {imageGenerator === 'flux' ? 'Generating with FLUX...' : 'Making your image...'}
+                  Generating with FLUX...
                 </motion.div>
               ) : (
                 <div className="flex items-center gap-2">
-                  {imageGenerator === 'flux' ? <Zap className="h-4 w-4" /> : <Wand2 className="h-4 w-4" />}
-                  Create with {imageGenerator === 'flux' ? 'FLUX' : 'Gemini'}
+                  <Zap className="h-4 w-4" />
+                  Create with FLUX
                 </div>
               )}
             </Button>
@@ -700,7 +637,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
             ) : (
               <div className="aspect-[2/3] max-w-sm mx-auto bg-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center">
                 <div className="text-center space-y-2">
-                  <Wand2 className="h-8 w-8 mx-auto text-muted-foreground/50" />
+                  <Zap className="h-8 w-8 mx-auto text-muted-foreground/50" />
                   <p className="text-sm text-muted-foreground">
                     Create your image to see it here
                   </p>

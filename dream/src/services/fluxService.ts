@@ -44,7 +44,17 @@ export class FluxService {
     this.apiKey = key;
   }
 
+  private ensureConfiguredFromEnv() {
+    if (!this.apiKey) {
+      const envKey = import.meta.env.VITE_FLUX_API_KEY as string | undefined;
+      if (envKey && typeof envKey === 'string' && envKey.trim().length > 0) {
+        this.setApiKey(envKey.trim());
+      }
+    }
+  }
+
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    this.ensureConfiguredFromEnv();
     if (!this.apiKey) {
       throw new Error('FLUX API key not set. Please configure your API key.');
     }
@@ -88,6 +98,7 @@ export class FluxService {
   ): Promise<{ imageBase64: string; suggestedTitle: string; suggestedSubtitle: string; imageUrl?: string }> {
     console.log('🎨 Starting FLUX dream image generation...');
     
+    this.ensureConfiguredFromEnv();
     if (!this.apiKey) {
       throw new Error('FLUX API key not configured');
     }
@@ -139,6 +150,7 @@ export class FluxService {
   ): Promise<{ imageBase64: string; suggestedTitle: string; suggestedSubtitle: string; imageUrl?: string }> {
     console.log('🎨 Starting FLUX image generation from optimized prompt...');
     
+    this.ensureConfiguredFromEnv();
     if (!this.apiKey) {
       throw new Error('FLUX API key not configured');
     }

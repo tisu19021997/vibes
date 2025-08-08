@@ -1,4 +1,4 @@
-import { DreamAnalysisRequest, DreamAnalysisResponse, CardNameSuggestion } from '@/types/dream';
+import { DreamAnalysisRequest, DreamAnalysisResponse } from '@/types/dream';
 import { GoogleGenAI } from '@google/genai';
 
 const JUNG_PROMPT = `
@@ -87,11 +87,21 @@ export class GeminiService {
     this.genAI = new GoogleGenAI({ apiKey: key });
   }
 
+  private ensureConfiguredFromEnv() {
+    if (!this.genAI) {
+      const envKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+      if (envKey && typeof envKey === 'string' && envKey.trim().length > 0) {
+        this.setApiKey(envKey.trim());
+      }
+    }
+  }
+
   async analyzeDream(request: DreamAnalysisRequest): Promise<DreamAnalysisResponse> {
     console.log('🔮 Starting dream analysis...');
     console.log('Dream content length:', request.dreamContent.length);
     console.log('API key configured:', this.apiKey ? 'Yes (***...)' : 'No');
 
+    this.ensureConfiguredFromEnv();
     if (!this.genAI) {
       console.error('❌ API key not set');
       throw new Error('Gemini API key not set. Please configure your API key.');
@@ -251,6 +261,7 @@ export class GeminiService {
   async generateVisualConcept(analysis: string, jungianInterpretation: string, symbols: string[], archetypes: string[], emotions: string[], tarotCard: { title: string; subtitle: string }, theme: string): Promise<string> {
     console.log('🎨 Generating visual concept for tarot card...');
     
+    this.ensureConfiguredFromEnv();
     if (!this.genAI) {
       throw new Error('Gemini API key not configured for visual concept generation');
     }
@@ -344,6 +355,7 @@ Keep it mystical, symbolic, and true to traditional tarot card aesthetics.`;
   async optimizeImagePrompt(visualConcept: string): Promise<string> {
     console.log('🔧 Optimizing visual concept for image generation...');
     
+    this.ensureConfiguredFromEnv();
     if (!this.genAI) {
       throw new Error('Gemini API key not configured for prompt optimization');
     }
@@ -449,6 +461,7 @@ Synthesize the visual concept into a single, comprehensive paragraph (under 280 
   async generateDreamImage(dreamAnalysis: DreamAnalysisResponse, theme: string): Promise<{ imageBase64: string; suggestedTitle: string; suggestedSubtitle: string }> {
     console.log('🎨 Starting optimized two-stage tarot card generation...');
     
+    this.ensureConfiguredFromEnv();
     if (!this.genAI) {
       throw new Error('Gemini API key not configured for image generation');
     }
@@ -540,6 +553,7 @@ Synthesize the visual concept into a single, comprehensive paragraph (under 280 
   async prepareImagePrompt(dreamAnalysis: DreamAnalysisResponse, theme: string): Promise<string> {
     console.log('🎨 Preparing optimized prompt for external image generation...');
     
+    this.ensureConfiguredFromEnv();
     if (!this.genAI) {
       throw new Error('Gemini API key not configured for prompt preparation');
     }

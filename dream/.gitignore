@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.*.local
+.env.local
+
+# Vite specific
+.vite/ # Vite's cache directory (usually inside node_modules, but good to be explicit)
+
+# IDE and OS generated files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Test coverage
+coverage/
+
+# Misc
+.cache/
