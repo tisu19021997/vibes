@@ -25,10 +25,10 @@ exports.handler = async (event) => {
 
   try {
     const keyParam = (event.queryStringParameters && event.queryStringParameters.key) || 'users';
-    const allowed = { users: 'users.json', counts: 'image_counts.json' };
-    const blobKey = allowed[keyParam];
-    if (!blobKey) {
-      return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: 'Invalid key. Use ?key=users or ?key=counts' };
+    const allowed = { users: 'users.json', counts: 'image_counts.json', summary: true, stats: true };
+    const isAllowed = Object.prototype.hasOwnProperty.call(allowed, keyParam);
+    if (!isAllowed) {
+      return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: 'Invalid key. Use ?key=users, ?key=counts, or ?key=summary' };
     }
 
     const STORE_NAME = 'oneiroi-analytics';
@@ -59,6 +59,26 @@ exports.handler = async (event) => {
       }
     }
 
+    // Summary/stats view: return aggregated totals
+    if (keyParam === 'summary' || keyParam === 'stats') {
+      const users = (await readJson('users.json', {})) || {};
+      const counts = (await readJson('image_counts.json', {})) || {};
+
+      const totalUsers = Object.keys(users).length;
+      const totalImages = Object.values(counts).reduce((sum, value) => {
+        const numeric = typeof value === 'number' ? value : 0;
+        return sum + numeric;
+      }, 0);
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ totalUsers, totalImages }),
+      };
+    }
+
+    // Raw view for users or counts
+    const blobKey = allowed[keyParam];
     const data = (await readJson(blobKey, {})) || {};
 
     return {
