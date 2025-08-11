@@ -138,6 +138,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       setProgressPercent(92);
       const dataUrl = `data:image/png;base64,${result.imageBase64}`;
       const { userId, sessionId } = getAnonIds();
+      const dreamSnippet = (typeof dreamContent === 'string' ? dreamContent : JSON.stringify(dreamContent || '')).slice(0, 255);
       const uploadResp = await fetch('/api/upload-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,14 +146,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
           dataUrl,
           folder: 'oneiroi/dreams',
           publicId: `dream_${Date.now()}`,
-          context: { userId, sessionId, title: cardTitle || result.suggestedTitle },
-          metadata: {
-            userId,
-            sessionId,
-            theme: themeName,
-            dream: dreamContent,
-            archetypes: dreamAnalysis.archetypes,
-          },
+          context: { userId, sessionId, title: cardTitle || result.suggestedTitle, theme: themeName, dream: dreamSnippet },
         }),
       });
       if (!uploadResp.ok) {

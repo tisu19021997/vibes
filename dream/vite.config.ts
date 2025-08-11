@@ -113,7 +113,7 @@ export default defineConfig(({ mode }) => ({
               req.on('error', (e) => reject(e));
             });
             const bodyStr = Buffer.concat(chunks).toString('utf-8');
-            const { dataUrl, folder = 'oneiroi/dreams', publicId, context, metadata } = JSON.parse(bodyStr || '{}');
+            const { dataUrl, folder = 'oneiroi/dreams', publicId, context } = JSON.parse(bodyStr || '{}');
             if (!dataUrl || typeof dataUrl !== 'string') {
               res.statusCode = 400;
               res.setHeader('Access-Control-Allow-Origin', '*');
@@ -128,10 +128,21 @@ export default defineConfig(({ mode }) => ({
               api_secret: process.env.CLOUDINARY_API_SECRET,
               secure: true,
             });
-            const mergedContext = {
-              ...(context && typeof context === 'object' ? context : {}),
-              ...(metadata && typeof metadata === 'object' ? metadata : {}),
+            const toStringValue = (val: unknown): string => {
+              if (val === null || val === undefined) return '';
+              if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') return String(val);
+              try { return JSON.stringify(val); } catch { return String(val as any); }
             };
+
+            const maxLen = 255;
+            const allowedContextKeys = ['userId', 'sessionId', 'title', 'theme', 'dream'];
+            const mergedContext = context && typeof context === 'object'
+              ? Object.fromEntries(
+                  Object.entries(context as Record<string, unknown>)
+                    .filter(([k]) => allowedContextKeys.includes(k as string))
+                    .map(([k, v]) => [k, toStringValue(v).slice(0, maxLen)])
+                ) as Record<string, string>
+              : {} as Record<string, string>;
 
             const result = await cloudinary.uploader.upload(dataUrl, {
               folder,

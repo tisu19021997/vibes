@@ -33,7 +33,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { dataUrl, folder = 'oneiroi/dreams', publicId, context, metadata } = JSON.parse(event.body || '{}');
+    const { dataUrl, folder = 'oneiroi/dreams', publicId, context } = JSON.parse(event.body || '{}');
 
     if (!dataUrl || typeof dataUrl !== 'string') {
       return {
@@ -44,10 +44,20 @@ exports.handler = async (event) => {
     }
 
     // Upload the data URL directly; Cloudinary supports data URI uploads
-    const mergedContext = {
-      ...(context && typeof context === 'object' ? context : {}),
-      ...(metadata && typeof metadata === 'object' ? metadata : {}),
+    const toStringValue = (val) => {
+      if (val === null || val === undefined) return '';
+      if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') return String(val);
+      try { return JSON.stringify(val); } catch { return String(val); }
     };
+    const maxLen = 255;
+    const allowedContextKeys = ['userId', 'sessionId', 'title', 'theme', 'dream'];
+    const safeContext = context && typeof context === 'object'
+      ? Object.fromEntries(
+          Object.entries(context)
+            .filter(([k]) => allowedContextKeys.includes(k))
+            .map(([k, v]) => [k, toStringValue(v).slice(0, maxLen)])
+        )
+      : {};
 
     const result = await cloudinary.uploader.upload(dataUrl, {
       folder,
@@ -56,8 +66,8 @@ exports.handler = async (event) => {
       overwrite: true,
       // Ensure PNG output consistent with generator
       format: 'png',
-      // Tag with optional context for analytics (userId/sessionId)
-      context: Object.keys(mergedContext).length ? mergedContext : undefined,
+      // Tag with optional context (free-form, allowlisted keys only)
+      context: Object.keys(safeContext).length ? safeContext : undefined,
     });
 
     return {
@@ -70,8 +80,6 @@ exports.handler = async (event) => {
         height: result.height,
         bytes: result.bytes,
         context: result.context,
-        // Some metadata may be exposed via context.custom in Cloudinary
-        metadata: result.metadata,
       }),
     };
   } catch (err) {
