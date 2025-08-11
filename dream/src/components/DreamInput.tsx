@@ -83,7 +83,7 @@ export const DreamInput: React.FC<DreamInputProps> = ({ onSubmit, isAnalyzing })
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="text-center space-y-3">
-        <h1 className="text-4xl font-light tracking-tight font-candy">Tell your dream</h1>
+        <h1 className="text-5xl font-light tracking-tight font-candy">tell your dream</h1>
         <p className="text-muted-foreground text-base max-w-2xl mx-auto font-sans">
           Capture what unfolded and how it felt.
         </p>
@@ -107,7 +107,7 @@ export const DreamInput: React.FC<DreamInputProps> = ({ onSubmit, isAnalyzing })
           >
             {isRecording ? <MicOff className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5" />}
           </Button>
-          <Button onClick={handleSubmit} disabled={!dreamText.trim() || isAnalyzing} className="font-sans mystical-button" variant='default'>
+          <Button onClick={handleSubmit} disabled={!dreamText.trim() || isAnalyzing} className="font-sans mystical-button" variant='default' title={!dreamText.trim() ? 'Write a few words to begin' : undefined}>
             {isAnalyzing ? (
               <>
                 <Sparkles className="h-4 w-4 mr-2 animate-spin" />

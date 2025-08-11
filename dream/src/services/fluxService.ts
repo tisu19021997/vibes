@@ -1,5 +1,12 @@
 import { DreamAnalysisResponse } from '@/types/dream';
 
+export type FluxGenerationPhase = 'request' | 'polling' | 'downloading' | 'complete' | 'error';
+export interface FluxGenerationProgress {
+  phase: FluxGenerationPhase;
+  message: string;
+  percent?: number;
+}
+
 interface FluxGenerateRequest {
   prompt: string;
   input_image?: string;
@@ -95,7 +102,8 @@ export class FluxService {
   async generateDreamImage(
     dreamAnalysis: DreamAnalysisResponse, 
     theme: string,
-    aspectRatio: string = '2:3'
+    aspectRatio: string = '2:3',
+    onProgress?: (update: FluxGenerationProgress) => void
   ): Promise<{ imageBase64: string; suggestedTitle: string; suggestedSubtitle: string; imageUrl?: string }> {
     console.log('🎨 Starting FLUX dream image generation...');
     
@@ -119,6 +127,7 @@ export class FluxService {
       };
 
       console.log('🚀 Sending FLUX generation request...');
+      onProgress?.({ phase: 'request', message: 'Calling the canvas to life…', percent: 10 });
       const generateResponse = await this.makeRequest<FluxGenerateResponse>('/flux-kontext-pro', {
         method: 'POST',
         body: JSON.stringify(generateRequest),
@@ -127,7 +136,8 @@ export class FluxService {
       console.log('✅ FLUX generation request sent, task ID:', generateResponse.id);
 
       // Step 2: Poll for the result
-      const result = await this.pollForResult(generateResponse.id);
+      onProgress?.({ phase: 'polling', message: 'The vision is taking shape…', percent: 12 });
+      const result = await this.pollForResult(generateResponse.id, 30, 5000, onProgress);
 
       console.log('✅ FLUX image generation completed successfully');
 
@@ -140,6 +150,7 @@ export class FluxService {
 
     } catch (error) {
       console.error('❌ Error in FLUX image generation:', error);
+      onProgress?.({ phase: 'error', message: 'The vision faltered before forming.', percent: 0 });
       throw new Error(`Failed to generate FLUX image: ${error.message}`);
     }
   }
@@ -147,7 +158,8 @@ export class FluxService {
   async generateImageFromPrompt(
     optimizedPrompt: string,
     dreamAnalysis: DreamAnalysisResponse,
-    aspectRatio: string = '2:3'
+    aspectRatio: string = '2:3',
+    onProgress?: (update: FluxGenerationProgress) => void
   ): Promise<{ imageBase64: string; suggestedTitle: string; suggestedSubtitle: string; imageUrl?: string }> {
     console.log('🎨 Starting FLUX image generation from optimized prompt...');
     
@@ -169,6 +181,7 @@ export class FluxService {
       };
 
       console.log('🚀 Sending FLUX generation request...');
+      onProgress?.({ phase: 'request', message: 'Calling the canvas to life…', percent: 10 });
       const generateResponse = await this.makeRequest<FluxGenerateResponse>('/flux-kontext-pro', {
         method: 'POST',
         body: JSON.stringify(generateRequest),
@@ -177,7 +190,8 @@ export class FluxService {
       console.log('✅ FLUX generation request sent, task ID:', generateResponse.id);
 
       // Step 2: Poll for the result
-      const result = await this.pollForResult(generateResponse.id);
+      onProgress?.({ phase: 'polling', message: 'The vision is taking shape…', percent: 12 });
+      const result = await this.pollForResult(generateResponse.id, 30, 5000, onProgress);
 
       console.log('✅ FLUX image generation completed successfully');
 
@@ -190,11 +204,17 @@ export class FluxService {
 
     } catch (error) {
       console.error('❌ Error in FLUX image generation from prompt:', error);
+      onProgress?.({ phase: 'error', message: 'The vision faltered before forming.', percent: 0 });
       throw new Error(`Failed to generate FLUX image from prompt: ${error.message}`);
     }
   }
 
-  private async pollForResult(taskId: string, maxAttempts: number = 30, delayMs: number = 5000): Promise<{ imageBase64: string; imageUrl?: string }> {
+  private async pollForResult(
+    taskId: string,
+    maxAttempts: number = 30,
+    delayMs: number = 5000,
+    onProgress?: (update: FluxGenerationProgress) => void
+  ): Promise<{ imageBase64: string; imageUrl?: string }> {
     console.log(`⏳ Starting to poll for FLUX result, task ID: ${taskId}`);
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -216,9 +236,11 @@ export class FluxService {
           case 'Ready':
             if (result.result?.sample) {
               console.log('✅ FLUX image is ready! Attempting to download...');
+              onProgress?.({ phase: 'downloading', message: 'Drawing the final veil…', percent: 85 });
               
               // Download and convert to base64 via server proxy only
               const imageBase64 = await this.downloadImageAsBase64(result.result.sample);
+              onProgress?.({ phase: 'complete', message: 'Your vision has arrived.', percent: 90 });
               return { imageBase64 };
             } else {
               throw new Error('Image generation completed but no image data received');
@@ -226,19 +248,29 @@ export class FluxService {
 
           case 'Pending':
             console.log(`⏳ Still processing... Progress: ${result.progress || 0}%`);
+            {
+              const reported = typeof result.progress === 'number' ? Math.max(15, Math.min(80, result.progress)) : undefined;
+              // If progress is unknown, estimate based on attempts
+              const estimated = Math.min(80, Math.max(15, Math.round((attempt / maxAttempts) * 65) + 15));
+              const percent = reported ?? estimated;
+              onProgress?.({ phase: 'polling', message: 'The vision is taking shape…', percent });
+            }
             break;
 
           case 'Error':
             console.error('❌ FLUX generation failed with error status');
+            onProgress?.({ phase: 'error', message: 'The vision faltered before forming.', percent: 0 });
             throw new Error(`Image generation failed: ${JSON.stringify(result.details)}`);
 
           case 'Request Moderated':
           case 'Content Moderated':
             console.error('❌ Content was moderated by FLUX');
+            onProgress?.({ phase: 'error', message: 'The path was barred by the wards.', percent: 0 });
             throw new Error('Image generation was blocked due to content policy');
 
           case 'Task not found':
             console.error('❌ Task not found');
+            onProgress?.({ phase: 'error', message: 'The thread of this vision was lost.', percent: 0 });
             throw new Error('Generation task not found');
 
           default:

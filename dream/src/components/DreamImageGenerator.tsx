@@ -4,14 +4,16 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Download, Palette, Sparkles, Save, Zap, Maximize2, X } from 'lucide-react';
+import { Download, Palette, Sparkles, Save, Zap, Maximize2, X, RefreshCcw, FlipHorizontal } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CARD_THEMES, TarotCard, DreamAnalysisResponse, Dream } from '@/types/dream';
 import { format } from 'date-fns';
 import { geminiService } from '@/services/geminiService';
-import { fluxService } from '@/services/fluxService';
+import { fluxService, type FluxGenerationProgress } from '@/services/fluxService';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import TarotFlipCard from '@/components/TarotFlipCard';
+import { Progress } from '@/components/ui/progress';
 import { sanitizeFileName } from '@/lib/utils';
 import { getAnonIds, trackImageGenerated } from '@/services/analytics';
 
@@ -43,6 +45,10 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
   const [previewCard, setPreviewCard] = useState<TarotCard | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [progressPercent, setProgressPercent] = useState<number>(0);
+  const [progressMessage, setProgressMessage] = useState<string>('');
+  const [showProgress, setShowProgress] = useState<boolean>(false);
+  const [isFlipped, setIsFlipped] = useState<boolean>(false);
 
   const generateNameSuggestions = useCallback(async () => {
     if (!dreamAnalysis) return;
@@ -91,6 +97,9 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
 
   const generateCardImage = async () => {
     setIsGenerating(true);
+    setShowProgress(true);
+    setProgressPercent(2);
+    setProgressMessage('Preparing your vision…');
     
     try {
       console.log('🎨 Starting FLUX tarot card generation...');
@@ -99,21 +108,34 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       
       // Step 1: Use Gemini to prepare the optimized prompt
       console.log('🎨 Step 1: Preparing optimized prompt with Gemini...');
+      setProgressMessage('Weaving your dream\'s symbols…');
+      setProgressPercent(8);
       const optimizedPrompt = await geminiService.prepareImagePrompt(
         dreamAnalysis,
         themeName
       );
+      setProgressMessage('The circle is drawn. Invoking the vision…');
+      setProgressPercent(12);
       
       // Step 2: Use FLUX to generate the image from the optimized prompt
       console.log('🖼️ Step 2: Generating image with FLUX from optimized prompt...');
+      const onFluxProgress = (update: FluxGenerationProgress) => {
+        setProgressMessage(update.message);
+        if (typeof update.percent === 'number') {
+          setProgressPercent(update.percent);
+        }
+      };
       result = await fluxService.generateImageFromPrompt(
         optimizedPrompt,
         dreamAnalysis,
-        '2:3'
+        '2:3',
+        onFluxProgress
       );
       
       // Step 3: Upload to Cloudinary and get a permanent CDN URL
       console.log('☁️ Step 3: Uploading image to Cloudinary...');
+      setProgressMessage('Preserving your vision in the archives…');
+      setProgressPercent(92);
       const dataUrl = `data:image/png;base64,${result.imageBase64}`;
       const { userId, sessionId } = getAnonIds();
       const uploadResp = await fetch('/api/upload-image', {
@@ -128,7 +150,8 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
             userId,
             sessionId,
             theme: themeName,
-            archetype: dreamAnalysis.archetypes?.[0] || '',
+            dream: dreamContent,
+            archetypes: dreamAnalysis.archetypes,
           },
         }),
       });
@@ -138,6 +161,12 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       }
       const { secureUrl, publicId } = await uploadResp.json();
       const imageUrl = secureUrl as string;
+      setProgressPercent(100);
+      setProgressMessage('Your vision is ready.');
+
+      // Step 4: Generate backside content (brief + poem)
+      setProgressMessage('Composing your card’s reverse…');
+      const backside = await geminiService.generateBacksideContent(dreamContent, optimizedPrompt);
       
       const newCard: TarotCard = {
         id: `card-${Date.now()}`,
@@ -147,6 +176,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
         title: cardTitle || result.suggestedTitle,
         subtitle: cardSubtitle || result.suggestedSubtitle,
         analysis: dreamAnalysis.analysis, // This is the main analysis text
+        backside,
         createdAt: new Date()
       };
 
@@ -165,7 +195,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       console.error('Error generating FLUX card:', error);
       toast({
         title: "The vision is clouded",
-        description: error.message || "The ether was disturbed. Please try again.",
+        description: "Something went wrong. You can try again in a moment.",
         variant: "destructive",
       });
       
@@ -173,6 +203,12 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       await generateFallbackCard();
     } finally {
       setIsGenerating(false);
+      // Let the progress linger briefly then hide
+      setTimeout(() => {
+        setShowProgress(false);
+        setProgressMessage('');
+        setProgressPercent(0);
+      }, 1200);
     }
   };
 
@@ -298,6 +334,14 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
 
     const mockImageUrl = `data:image/svg+xml;base64,${safeBase64Encode(svgContent)}`;
 
+    // Also attempt to generate backside content for fallback
+    let backside: { brief: string; poem: string } | undefined;
+    try {
+      backside = await geminiService.generateBacksideContent(dreamContent);
+    } catch (err) {
+      backside = { brief: 'A fleeting echo of the night.', poem: 'shadows breathe softly\nbeneath a quiet moon\nI carry the hush\nof what the dark taught\ninto the waking light' };
+    }
+
     const newCard: TarotCard = {
       id: `card-${Date.now()}`,
       imageUrl: mockImageUrl,
@@ -305,6 +349,7 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
       title: cardTitle || 'My Dream',
       subtitle: cardSubtitle || format(new Date(), 'MMM d, yyyy'),
       analysis: dreamAnalysis.analysis, // This is the main analysis text
+      backside,
       createdAt: new Date()
     };
 
@@ -528,6 +573,17 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                 </div>
               )}
             </Button>
+            {showProgress && (
+              <div className="space-y-2 pt-2">
+                <div className="text-xs text-muted-foreground">{progressMessage}</div>
+                <Progress value={progressPercent} />
+                {progressPercent === 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    Having trouble? <button className="underline underline-offset-4" onClick={generateCardImage}>Try again</button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </Card>
 
@@ -540,9 +596,14 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                 Preview
               </Label>
               {previewCard && (
-                <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(true)} aria-label="Expand preview">
-                  <Maximize2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="sm" onClick={() => setIsFlipped(!isFlipped)} aria-label="Flip card">
+                    <FlipHorizontal className="h-3 w-3 mr-2" /> {isFlipped ? 'Frontside' : 'Backside'}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(true)} aria-label="Expand preview">
+                    <Maximize2 className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
             </div>
             
@@ -554,11 +615,11 @@ export const DreamImageGenerator: React.FC<TarotCardGeneratorProps> = ({
                   transition={{ type: "spring", damping: 20 }}
                   className="relative w-full max-w-[32rem] xl:max-w-full mx-auto"
                 >
-                  <img
-                    src={previewCard.imageUrl}
-                    alt={previewCard.title}
-                    className="w-full h-full object-cover rounded-lg shadow-dream"
-                    onClick={() => setIsPreviewOpen(true)}
+                  <TarotFlipCard
+                    card={previewCard}
+                    isFlipped={isFlipped}
+                    className="aspect-[2/3] w-full"
+                    onFrontClick={() => setIsPreviewOpen(true)}
                   />
                 </motion.div>
                 

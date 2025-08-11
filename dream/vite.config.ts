@@ -113,7 +113,7 @@ export default defineConfig(({ mode }) => ({
               req.on('error', (e) => reject(e));
             });
             const bodyStr = Buffer.concat(chunks).toString('utf-8');
-            const { dataUrl, folder = 'oneiroi/dreams', publicId } = JSON.parse(bodyStr || '{}');
+            const { dataUrl, folder = 'oneiroi/dreams', publicId, context, metadata } = JSON.parse(bodyStr || '{}');
             if (!dataUrl || typeof dataUrl !== 'string') {
               res.statusCode = 400;
               res.setHeader('Access-Control-Allow-Origin', '*');
@@ -128,12 +128,18 @@ export default defineConfig(({ mode }) => ({
               api_secret: process.env.CLOUDINARY_API_SECRET,
               secure: true,
             });
+            const mergedContext = {
+              ...(context && typeof context === 'object' ? context : {}),
+              ...(metadata && typeof metadata === 'object' ? metadata : {}),
+            };
+
             const result = await cloudinary.uploader.upload(dataUrl, {
               folder,
               public_id: publicId,
               resource_type: 'image',
               overwrite: true,
               format: 'png',
+              context: Object.keys(mergedContext).length ? mergedContext : undefined,
             });
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
@@ -144,6 +150,8 @@ export default defineConfig(({ mode }) => ({
               width: result.width,
               height: result.height,
               bytes: result.bytes,
+              context: result.context,
+              metadata: result.metadata,
             }));
           } catch (e) {
             res.statusCode = 500;

@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { sanitizeFileName } from '@/lib/utils';
 import { identifyOnce } from '@/services/analytics';
+import TarotFlipCard from '@/components/TarotFlipCard';
 
 interface ApiKeys {
   gemini?: string;
@@ -35,6 +36,7 @@ const Index = () => {
     flux: import.meta.env.VITE_FLUX_API_KEY,
   });
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [isViewingFlipped, setIsViewingFlipped] = useState(false);
   
   const { dreams, saveDream, deleteDream, isLoading } = useDreamStorage();
   const { toast } = useToast();
@@ -175,15 +177,12 @@ const Index = () => {
           className="flex justify-between items-center mb-16"
         >
           <div className="flex items-center gap-5">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: APP_CONFIG.ui.animationDuration, repeat: Infinity, ease: "linear" }}
-            >
-              <img src="/icon.png" alt={APP_NAME} className={APP_CONFIG.ui.loadingIconSize.large} />
-            </motion.div>
             <div>
-              <h1 className="text-5xl font-light font-candy tracking-tight">{APP_NAME.toLowerCase()}</h1>
-              <p className="text-base text-muted-foreground font-sans">{APP_TAGLINE.toLowerCase()}</p>
+              <img src="/icon.png" alt={APP_NAME} className="h-12 w-12" />
+            </div>
+            <div>
+              <h1 className="text-6xl font-light font-candy tracking-tight">{APP_NAME.toLowerCase()}</h1>
+              <p className="text-sm text-muted-foreground font-sans uppercase tracking-wide">{APP_TAGLINE.toLowerCase()}</p>
             </div>
           </div>
           
@@ -195,7 +194,7 @@ const Index = () => {
         </motion.div>
 
         {/* View Dream Dialog */}
-        <AlertDialog open={!!viewingDream} onOpenChange={() => setViewingDream(null)}>
+        <AlertDialog open={!!viewingDream} onOpenChange={() => { setViewingDream(null); setIsViewingFlipped(false); }}>
           <AlertDialogContent className="max-w-5xl">
             <div className="max-h-[85vh] overflow-y-auto">
               <AlertDialogHeader className="pb-6">
@@ -209,12 +208,20 @@ const Index = () => {
                   {viewingDream.tarotCard?.imageUrl && (
                     <div className="xl:self-start">
                       <div className="space-y-3 xl:sticky xl:top-8">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-sans text-muted-foreground">Card</div>
+                          {viewingDream.tarotCard.backside && (
+                            <Button variant="outline" size="sm" onClick={() => setIsViewingFlipped(!isViewingFlipped)}>
+                              {isViewingFlipped ? 'Front' : 'Back'}
+                            </Button>
+                          )}
+                        </div>
                         <div className="relative aspect-[2/3] w-full max-w-[320px] mx-auto xl:mx-0">
-                          <img
-                            src={viewingDream.tarotCard.imageUrl}
-                            alt={viewingDream.tarotCard.title || 'Dream card'}
-                            className="w-full h-full object-cover rounded-md shadow-dream cursor-zoom-in"
-                            onClick={() => setIsImagePreviewOpen(true)}
+                          <TarotFlipCard
+                            card={viewingDream.tarotCard}
+                            isFlipped={isViewingFlipped}
+                            className="w-full h-full"
+                            onFrontClick={() => setIsImagePreviewOpen(true)}
                           />
                         </div>
                       </div>
@@ -259,14 +266,14 @@ const Index = () => {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-10">
-          <TabsList className="grid w-full grid-cols-3 bg-transparent border-border h-12 text-sm">
-            <TabsTrigger value="input" className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none">
+          <TabsList className="grid w-full grid-cols-3 bg-transparent border-b border-border h-12 text-sm overflow-x-auto">
+            <TabsTrigger value="input" className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none focus-visible:outline-none">
               Add Dream
             </TabsTrigger>
-            <TabsTrigger value="analysis" disabled={!currentAnalysis} className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none">
+            <TabsTrigger value="analysis" disabled={!currentAnalysis} className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none focus-visible:outline-none">
               My Reading
             </TabsTrigger>
-            <TabsTrigger value="gallery" className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none">
+            <TabsTrigger value="gallery" className="flex items-center gap-2 px-4 font-sans data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none focus-visible:outline-none">
               Gallery ({dreams.length})
             </TabsTrigger>
           </TabsList>
@@ -280,12 +287,18 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent key="analysis" value="analysis" className="space-y-10">
+              {!currentAnalysis && isAnalyzing && (
+                <div className="grid gap-6">
+                  <div className="dream-card animate-pulse h-40" />
+                  <div className="dream-card animate-pulse h-56" />
+                </div>
+              )}
               {currentAnalysis && currentDream && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <div className="grid grid-cols-1 xl:grid-cols-[1fr_520px] gap-10">
+                  <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-16">
                     {/* Reading column */}
                     <div className="space-y-12">
                       <DreamAnalysis 
@@ -329,6 +342,7 @@ const Index = () => {
                   dreams={dreams}
                   onDeleteDream={handleDeleteDream}
                   onViewDream={handleViewDream}
+                  onAddDreamClick={createNewDream}
                 />
 
               </motion.div>

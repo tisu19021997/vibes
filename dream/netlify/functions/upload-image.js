@@ -33,7 +33,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { dataUrl, folder = 'oneiroi/dreams', publicId, context } = JSON.parse(event.body || '{}');
+    const { dataUrl, folder = 'oneiroi/dreams', publicId, context, metadata } = JSON.parse(event.body || '{}');
 
     if (!dataUrl || typeof dataUrl !== 'string') {
       return {
@@ -44,6 +44,11 @@ exports.handler = async (event) => {
     }
 
     // Upload the data URL directly; Cloudinary supports data URI uploads
+    const mergedContext = {
+      ...(context && typeof context === 'object' ? context : {}),
+      ...(metadata && typeof metadata === 'object' ? metadata : {}),
+    };
+
     const result = await cloudinary.uploader.upload(dataUrl, {
       folder,
       public_id: publicId,
@@ -52,7 +57,7 @@ exports.handler = async (event) => {
       // Ensure PNG output consistent with generator
       format: 'png',
       // Tag with optional context for analytics (userId/sessionId)
-      context: context && typeof context === 'object' ? context : undefined,
+      context: Object.keys(mergedContext).length ? mergedContext : undefined,
     });
 
     return {
@@ -65,6 +70,8 @@ exports.handler = async (event) => {
         height: result.height,
         bytes: result.bytes,
         context: result.context,
+        // Some metadata may be exposed via context.custom in Cloudinary
+        metadata: result.metadata,
       }),
     };
   } catch (err) {

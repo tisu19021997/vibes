@@ -1,5 +1,7 @@
 // Minimal anonymous analytics using Netlify Blobs
-// Tracks unique users (by anon userId) and per-user image counts
+// FIX: write per-user blobs to avoid last-write-wins on a single JSON file
+// - Users stored at: users/<userId>.json
+// - Image counts stored at: counts/<userId>.json
 const { getStore } = require('@netlify/blobs');
 const fetchImpl = global.fetch || require('node-fetch');
 
@@ -35,8 +37,6 @@ exports.handler = async (event) => {
     // Try bound store first, fallback to REST if not configured
     const STORE_NAME = 'oneiroi-analytics';
     const nowIso = new Date().toISOString();
-    const usersKey = 'users.json';
-    const countsKey = 'image_counts.json';
 
     async function readJson(key, defaultValue) {
       try {
@@ -46,14 +46,17 @@ exports.handler = async (event) => {
           ? getStore(STORE_NAME, { siteID, token, fetch: fetchImpl })
           : getStore(STORE_NAME);
         const data = await store.get(key, { type: 'json' });
-        return data || defaultValue;
+        return data ?? defaultValue;
       } catch (err) {
         const SITE_ID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
         const TOKEN = process.env.NETLIFY_API_TOKEN;
         if (!SITE_ID || !TOKEN) return defaultValue;
         const base = `https://api.netlify.com/api/v1/blobs/${encodeURIComponent(SITE_ID)}/${encodeURIComponent(STORE_NAME)}`;
         try {
-          const res = await fetchImpl(`${base}/${encodeURIComponent(key)}`);
+          // Use encodeURI so slashes in keys become path segments (folders)
+          const res = await fetchImpl(`${base}/${encodeURI(key)}`, {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+          });
           if (!res.ok) return defaultValue;
           const text = await res.text();
           return text ? JSON.parse(text) : defaultValue;
@@ -76,7 +79,8 @@ exports.handler = async (event) => {
         const TOKEN = process.env.NETLIFY_API_TOKEN;
         if (!SITE_ID || !TOKEN) return;
         const base = `https://api.netlify.com/api/v1/blobs/${encodeURIComponent(SITE_ID)}/${encodeURIComponent(STORE_NAME)}`;
-        await fetchImpl(`${base}/${encodeURIComponent(key)}`, {
+        // Use encodeURI so slashes in keys become path segments (folders)
+        await fetchImpl(`${base}/${encodeURI(key)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
           body: JSON.stringify(value),
@@ -84,20 +88,34 @@ exports.handler = async (event) => {
       }
     }
 
-    const users = await readJson(usersKey, {});
-    const counts = await readJson(countsKey, {});
-
     if (type === 'identify') {
-      if (!users[userId]) {
-        users[userId] = { firstSeen: nowIso, sessions: {} };
-      }
+      // Store per user: users/<userId>.json
+      const userKey = `users/${encodeURIComponent(userId)}.json`;
+      const existingUser = (await readJson(userKey, null)) || null;
+      const firstSeen = existingUser && existingUser.firstSeen ? existingUser.firstSeen : nowIso;
+      const sessions = (existingUser && existingUser.sessions) || {};
       if (sessionId) {
-        users[userId].sessions[sessionId] = nowIso;
+        sessions[sessionId] = nowIso;
       }
-      await writeJson(usersKey, users);
+      await writeJson(userKey, { firstSeen, sessions });
+
+      // Also update legacy aggregate users.json as a simple fallback (best-effort merge)
+      const usersAggKey = 'users.json';
+      const usersAgg = (await readJson(usersAggKey, {})) || {};
+      usersAgg[userId] = { firstSeen, sessions };
+      await writeJson(usersAggKey, usersAgg);
     } else if (type === 'image_generated') {
-      counts[userId] = (counts[userId] || 0) + 1;
-      await writeJson(countsKey, counts);
+      // Store per user count: counts/<userId>.json
+      const countKey = `counts/${encodeURIComponent(userId)}.json`;
+      const current = await readJson(countKey, 0);
+      const next = (typeof current === 'number' ? current : 0) + 1;
+      await writeJson(countKey, next);
+
+      // Also update legacy image_counts.json aggregate
+      const countsAggKey = 'image_counts.json';
+      const countsAgg = (await readJson(countsAggKey, {})) || {};
+      countsAgg[userId] = (typeof countsAgg[userId] === 'number' ? countsAgg[userId] : 0) + 1;
+      await writeJson(countsAggKey, countsAgg);
     } else {
       return { statusCode: 400, headers: { 'Access-Control-Allow-Origin': '*' }, body: 'Unknown type' };
     }

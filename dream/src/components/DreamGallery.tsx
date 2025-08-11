@@ -12,9 +12,10 @@ interface DreamGalleryProps {
   dreams: Dream[];
   onDeleteDream: (dreamId: string) => void;
   onViewDream: (dream: Dream) => void;
+  onAddDreamClick?: () => void;
 }
 
-export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDream, onViewDream }) => {
+export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDream, onViewDream, onAddDreamClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredDreams = dreams
@@ -36,6 +37,9 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
           <p className="text-muted-foreground max-w-md mx-auto">
             Add your first dream and start collecting beautiful memories.
           </p>
+          {onAddDreamClick && (
+            <Button onClick={onAddDreamClick} className="mystical-button">Add Dream</Button>
+          )}
         </div>
       </motion.div>
     );
@@ -45,7 +49,7 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-light">Archive</h2>
+          <h2 className="text-3xl font-light">Archive</h2>
           <Badge variant="outline">{dreams.length}</Badge>
         </div>
         <div className="relative">
@@ -80,7 +84,7 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
                     <div className="aspect-square w-full">
                       <img
                         src={dream.tarotCard.imageUrl}
-                        alt="Dream visualization"
+                        alt={dream.tarotCard.title ? `Dream card: ${dream.tarotCard.title}` : 'Dream visualization'}
                         className="w-full h-full object-cover rounded-md shadow-sm"
                       />
                     </div>
@@ -88,7 +92,7 @@ export const DreamGallery: React.FC<DreamGalleryProps> = ({ dreams, onDeleteDrea
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      {format(new Date(dream.createdAt), 'MMM d, yyyy')}
+                      <time aria-label={`Created on ${format(new Date(dream.createdAt), 'MMM d, yyyy')}`}>{format(new Date(dream.createdAt), 'MMM d, yyyy')}</time>
                     </div>
                     <p className="text-sm line-clamp-3 leading-relaxed">{dream.content}</p>
                   </div>

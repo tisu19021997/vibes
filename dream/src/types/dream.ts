@@ -15,6 +15,10 @@ export interface TarotCard {
   title: string;
   subtitle?: string;
   analysis: string;
+  backside?: {
+    brief: string;
+    poem: string;
+  };
   createdAt: Date;
 }
 

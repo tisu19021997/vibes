@@ -80,6 +80,7 @@ Design a mystical tarot card that captures the dream's essence:
 
 **OUTPUT FORMAT:**
 Return properly formatted JSON with all required fields. Ensure arrays contain strings, and the tarotCard object has both title and subtitle fields.
+All text must be written in the dreamer's native language (the one they speak).
 
 Dreams to analyze:
 `;
@@ -571,6 +572,55 @@ Synthesize the visual concept into a single, comprehensive paragraph (under 280 
     } catch (error) {
       console.error('❌ Error in optimized tarot card generation:', error);
       throw new Error(`Failed to generate optimized tarot card: ${error.message}`);
+    }
+  }
+
+  async generateBacksideContent(dreamContent: string, visualSummaryHint?: string): Promise<{ brief: string; poem: string }> {
+    console.log('📝 Generating backside content (brief + poem)...');
+    this.ensureConfiguredFromEnv();
+    if (!this.genAI) {
+      throw new Error('Gemini API key not configured for backside content');
+    }
+
+    const briefPrompt = `Summarize the following dream in 2-3 concise, emotionally-resonant sentences (max 55 words total). Avoid analysis or advice. Use plain text, no markdown.
+
+Dream:\n"""${dreamContent}"""`;
+
+    const poemPrompt = `Write a short, free-verse, 4-6 line poem inspired by the visual essence of this dream. Keep lines under 12 words. Use evocative but simple language. No titles, no punctuation-heavy lines, no emojis, no markdown.
+
+Dream (for inspiration):\n"""${visualSummaryHint || dreamContent}"""`;
+
+    const config = {
+      temperature: 1.0,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 10000,
+      responseMimeType: 'text/plain'
+    } as const;
+
+    try {
+      const [briefResp, poemResp] = await Promise.all([
+        this.genAI.models.generateContent({ model: 'gemini-2.5-flash', config, contents: [{ role: 'user', parts: [{ text: briefPrompt }] }] }),
+        this.genAI.models.generateContent({ model: 'gemini-2.5-flash', config, contents: [{ role: 'user', parts: [{ text: poemPrompt }] }] })
+      ]);
+
+      console.log('Brief response:', briefResp);
+      console.log('Poem response:', poemResp);
+
+      const briefText = briefResp.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      const poemText = poemResp.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+      if (!briefText) {
+        throw new Error('No brief text returned by Gemini');
+      }
+      if (!poemText) {
+        throw new Error('No poem text returned by Gemini');
+      }
+
+      return { brief: briefText, poem: poemText };
+    } catch (error) {
+      console.error('❌ Error generating backside content:', error);
+      throw new Error(`Failed to generate backside content: ${error.message}`);
     }
   }
 
